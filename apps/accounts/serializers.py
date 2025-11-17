@@ -52,6 +52,14 @@ class UserPasswordSerializer(serializers.ModelSerializer):
         ]
 
 
+class UserEmailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'email'
+        ]
+
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 

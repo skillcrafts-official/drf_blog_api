@@ -11,7 +11,7 @@ from drf_spectacular.utils import extend_schema_view, extend_schema
 from apps.accounts.models import User
 from apps.accounts.serializers import (
     UserSerializer, UserConfirmSerializer,
-    UserPasswordSerializer,
+    UserPasswordSerializer, UserEmailSerializer,
     MyTokenObtainPairSerializer
 )
 
@@ -48,8 +48,30 @@ class UpdateUserPasswordView(APIView):
                 }, status=status.HTTP_200_OK
             )
         return Response(
-                data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
+            data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class UpdateUserEmailView(APIView):
+    serializer_class = UserEmailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        # user = request.user
+        data = request.data
+        serializer = self.serializer_class(data=data)
+        if serializer.is_valid():
+            user = request.user
+            user.password = serializer.validated_data['email']
+            user.save()
+            return Response(
+                data={
+                    "message": "Email has been saved successful!"
+                }, status=status.HTTP_200_OK
             )
+        return Response(
+            data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class MyTokenObtainPairView(TokenObtainPairView):

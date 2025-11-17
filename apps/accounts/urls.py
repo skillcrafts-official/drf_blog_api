@@ -4,7 +4,7 @@ from rest_framework_simplejwt.views import (
 )
 from apps.accounts.views import (
     UserView, UserConfirmView, MyTokenObtainPairView,
-    UpdateUserPasswordView
+    UpdateUserPasswordView, UpdateUserEmailView
 )
 
 
@@ -20,6 +20,10 @@ urlpatterns = [
     path(
         'user/password/', UpdateUserPasswordView.as_view(),
         name='change_password'
+    ),
+    path(
+        'user/email/', UpdateUserEmailView.as_view(),
+        name='change_email'
     ),
     path(
         'user/<pk>/confirm', UserConfirmView.as_view({'put': 'update'}),
