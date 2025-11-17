@@ -43,6 +43,16 @@ class UserConfirmSerializer(serializers.Serializer):
         pass
 
 
+class UserPasswordSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = [
+            'password'
+        ]
+
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     @classmethod

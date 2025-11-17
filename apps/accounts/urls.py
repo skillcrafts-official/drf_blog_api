@@ -3,7 +3,8 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView, TokenVerifyView
 )
 from apps.accounts.views import (
-    UserView, UserConfirmView, MyTokenObtainPairView
+    UserView, UserConfirmView, MyTokenObtainPairView,
+    UpdateUserPasswordView
 )
 
 
@@ -15,6 +16,10 @@ urlpatterns = [
     path(
         'user/<pk>', UserView.as_view({'get': 'retrieve', 'put': 'update'}),
         name='user_credantional'
+    ),
+    path(
+        'user/password/', UpdateUserPasswordView.as_view(),
+        name='change_password'
     ),
     path(
         'user/<pk>/confirm', UserConfirmView.as_view({'put': 'update'}),
