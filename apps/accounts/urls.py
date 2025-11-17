@@ -3,7 +3,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView, TokenVerifyView
 )
 from apps.accounts.views import (
-    UserView, UserConfirmView, ProfileView, MyTokenObtainPairView
+    UserView, UserConfirmView, MyTokenObtainPairView
 )
 
 
@@ -31,13 +31,5 @@ urlpatterns = [
     path(
         'user/token/verify/', TokenVerifyView.as_view(),
         name='token_verify'
-    ),
-    path(
-        'profile/', ProfileView.as_view({'get': 'list'}),
-        name='profiles'
-    ),
-    path(
-        'profile/<pk>/', ProfileView.as_view({'get': 'list'}),
-        name='user_profile'
     ),
 ]

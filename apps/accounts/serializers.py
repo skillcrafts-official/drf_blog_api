@@ -1,7 +1,7 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from apps.accounts.models import User, Profile
+from apps.accounts.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -41,13 +41,6 @@ class UserConfirmSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         pass
-
-
-class ProfileSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Profile
-        fields = '__all__'
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):

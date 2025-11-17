@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'apps.accounts'
+    'apps.accounts', 'apps.profiles'
 ]
 
 MIDDLEWARE = [
@@ -131,6 +131,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -197,3 +200,13 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
+
+# Настройки Email
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+DEFAULT_FROM_EMAIL = 'noreply@yourapp.com'
