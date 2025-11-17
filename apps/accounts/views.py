@@ -62,7 +62,7 @@ class UpdateUserEmailView(APIView):
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
             user = request.user
-            user.password = serializer.validated_data['email']
+            user.email = serializer.validated_data['email']
             user.save()
             return Response(
                 data={
