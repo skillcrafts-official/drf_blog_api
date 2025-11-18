@@ -4,11 +4,11 @@ from apps.accounts.models import User
 
 
 def user_avatar_path(instance, filename):
-    # uploads/avatars/user_123/avatar_1641234567890.jpg
-    # timestamp = int(time.time())
-    extension = filename.split('.')[-1]
-    # filename = f"avatar_{timestamp}.{extension}"
     return f"avatars/user_{instance.user.id}/{filename}"
+
+
+def user_wallpaper_path(instance, filename):
+    return f"wallpapers/user_{instance.user.id}/{filename}"
 
 
 class Profile(models.Model):
@@ -21,10 +21,12 @@ class Profile(models.Model):
     short_desc = models.CharField(max_length=300, null=True, blank=True)
     full_desc = models.TextField(null=True, blank=True)
 
-    wallpaper = models.ImageField(upload_to='wallpapers/', null=True, blank=True)
+    wallpaper = models.ImageField(upload_to=user_wallpaper_path, null=True, blank=True)
     avatar = models.ImageField(upload_to=user_avatar_path, null=True, blank=True)
 
     link_to_instagram = models.URLField(null=True, blank=True)
+    link_to_telegram = models.URLField(null=True, blank=True)
+    link_to_github = models.URLField(null=True, blank=True)
     link_to_vk = models.URLField(null=True, blank=True)
 
     user = models.OneToOneField(

@@ -11,7 +11,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'pk', 'email', 'password', 'is_comfirmed'
+            'pk', 'primary_email', 'password'
         ]
         # read_only_fields = [
         #     'pk', 'email', 'is_comfirmed'
@@ -24,7 +24,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserConfirmSerializer(serializers.Serializer):
-    email = serializers.CharField(read_only=True)
+    primary_email = serializers.CharField(read_only=True)
     confirm_code = serializers.CharField(write_only=True)
 
     def validate_confirm_code(self, confirm_code):
@@ -35,7 +35,7 @@ class UserConfirmSerializer(serializers.Serializer):
         return confirm_code
 
     def update(self, instance, validated_data):
-        instance.is_comfirmed = True
+        instance.is_confirmed = True
         instance.save()
         return instance
 
@@ -57,7 +57,7 @@ class UserEmailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = [
-            'email'
+            'primary_email'
         ]
 
 
