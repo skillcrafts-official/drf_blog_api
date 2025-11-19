@@ -30,7 +30,7 @@ class SelfUserProfileView(APIView):
         user = request.user
         try:
             # profile = Profile.objects.get(pk=user.id)
-            profile = request.user.profiles
+            profile = request.user.profile
         except Profile.DoesNotExist:
             profile = None
         if profile is None:

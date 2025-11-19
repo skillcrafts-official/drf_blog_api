@@ -21,8 +21,12 @@ class Profile(models.Model):
     short_desc = models.CharField(max_length=300, null=True, blank=True)
     full_desc = models.TextField(null=True, blank=True)
 
-    wallpaper = models.ImageField(upload_to=user_wallpaper_path, null=True, blank=True)
-    avatar = models.ImageField(upload_to=user_avatar_path, null=True, blank=True)
+    wallpaper = models.ImageField(
+        upload_to=user_wallpaper_path, null=True, blank=True
+    )
+    avatar = models.ImageField(
+        upload_to=user_avatar_path, null=True, blank=True
+    )
 
     link_to_instagram = models.URLField(null=True, blank=True)
     link_to_telegram = models.URLField(null=True, blank=True)
@@ -33,7 +37,7 @@ class Profile(models.Model):
         User,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='profiles'
+        related_name='profile'
     )
 
     class Meta:
