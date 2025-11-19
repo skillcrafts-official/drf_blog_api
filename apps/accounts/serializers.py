@@ -1,26 +1,49 @@
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from apps.accounts.models import User
+from apps.accounts.models import User, Email
+from apps.profiles.models import Profile
+
+
+class EmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Email
+        # fields = '__all__'
+        exclude = ['user']
 
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    # password2 = serializers.CharField(write_only=True)
+    emails = EmailSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'pk', 'primary_email', 'password'
+            'pk', 'primary_email', 'password', 'emails'
         ]
-        # read_only_fields = [
-        #     'pk', 'email', 'is_comfirmed'
-        # ]
 
     def create(self, validated_data):
-        # validated_data.pop('password2')
         validated_data['password'] = make_password(validated_data['password'])
-        return User.objects.create(**validated_data)
+        user = User.objects.create(**validated_data)
+
+        # при регистрации автоматически выбарется как primary_email
+        Email.objects.create(
+            email=user.primary_email,
+            user=user,
+            is_confirmed=True,  # временно!!!
+            is_active=True
+        )
+        # автоматически добавляется пустой профиль
+        Profile.objects.create(
+            user=user
+        )
+        return user
+    
+    def create_new_email(self, validated_data):
+        email = Email.objects.create(
+            email=validated_data['email']
+        )
+        return email
 
 
 class UserConfirmSerializer(serializers.Serializer):
@@ -44,20 +67,22 @@ class UserConfirmSerializer(serializers.Serializer):
 
 
 class UserPasswordSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
 
     class Meta:
         model = User
         fields = [
-            'password'
+            'user', 'password'
         ]
 
 
 class UserEmailSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
 
     class Meta:
-        model = User
+        model = Email
         fields = [
-            'primary_email'
+            'user', 'email'
         ]
 
 

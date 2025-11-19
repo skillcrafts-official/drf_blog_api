@@ -3,8 +3,15 @@ from apps.profiles.models import Profile
 from apps.accounts.serializers import UserSerializer
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class SelfProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Profile
+        fields = '__all__'
+
+
+class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile

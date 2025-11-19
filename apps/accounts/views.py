@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import make_password
+from django.db import IntegrityError
 
 from rest_framework.views import APIView, status
 from rest_framework.generics import GenericAPIView
@@ -7,8 +8,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from drf_spectacular.utils import extend_schema_view, extend_schema
-from apps.accounts.models import User
+from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse, OpenApiExample, OpenApiTypes
+from apps.accounts.models import User, Email
 from apps.accounts.serializers import (
     UserSerializer, UserConfirmSerializer,
     UserPasswordSerializer, UserEmailSerializer,
@@ -16,8 +17,11 @@ from apps.accounts.serializers import (
 )
 
 
+tags = ["user", "email"]
+
+
 class UserView(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     lookup_field = 'pk'
 
@@ -56,19 +60,34 @@ class UpdateUserEmailView(APIView):
     serializer_class = UserEmailSerializer
     permission_classes = [IsAuthenticated]
 
-    def put(self, request, *args, **kwargs):
-        # user = request.user
+    def post(self, request, *args, **kwargs):
+        user = request.user
         data = request.data
         serializer = self.serializer_class(data=data)
         if serializer.is_valid():
-            user = request.user
-            user.email = serializer.validated_data['email']
-            user.save()
-            return Response(
-                data={
-                    "message": "Email has been saved successful!"
-                }, status=status.HTTP_200_OK
-            )
+            data = serializer.validated_data
+            try:
+                Email.objects.create(**data, user=user)
+                return Response(
+                    data={
+                        "message": "Email has been saved successful!"
+                    }, status=status.HTTP_201_CREATED
+                )
+            except IntegrityError as e:
+                error_message = str(e)
+                if "unique_any_email_per_user" in error_message:
+                    return Response(
+                        data={
+                            "message": "Email already exists for you!"
+                        },
+                        status=status.HTTP_409_CONFLICT
+                    )
+                return Response(
+                    data={
+                        "message": error_message
+                    },
+                    status=status.HTTP_409_CONFLICT
+                )
         return Response(
             data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
         )

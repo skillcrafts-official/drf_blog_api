@@ -14,8 +14,8 @@ urlpatterns = [
         name='user_registration'
     ),
     path(
-        'user/<pk>', UserView.as_view({'get': 'retrieve', 'put': 'update'}),
-        name='user_credantional'
+        'user/<pk>', UserView.as_view({'get': 'retrieve'}),
+        name='user_info'
     ),
     path(
         'user/password/', UpdateUserPasswordView.as_view(),

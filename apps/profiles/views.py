@@ -1,11 +1,12 @@
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound, status
 from rest_framework.permissions import IsAuthenticated
 # from drf_spectacular.utils import extend_schema_view, extend_schema
 
 from apps.profiles.models import Profile
-from apps.profiles.serializers import ProfileSerializer, ProfileImageSerializer
+from apps.profiles.serializers import ProfileSerializer, SelfProfileSerializer
 
 
 class ProfilesView(APIView):
@@ -15,8 +16,15 @@ class ProfilesView(APIView):
         return Response()
 
 
-class UserProfileView(APIView):
+class UserProfileView(ModelViewSet):
+    queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
+    lookup_field = 'pk'
+
+
+class SelfUserProfileView(APIView):
+    serializer_class = SelfProfileSerializer
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
         user = request.user
@@ -39,29 +47,26 @@ class UserProfileView(APIView):
         data = request.data
         try:
             profile = Profile.objects.get(user=user)
-        except Profile.DoesNotExist:
-            profile = None
-
-        if profile:
             serializer = self.serializer_class(profile, data=data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(
                     data=serializer.data, status=200
                 )
-        if not profile:
-            data['user'] = user.id
-            serializer = self.serializer_class(data=data)
-            if serializer.is_valid():
-                data = serializer.validated_data
-                data['user'] = user
-                profile = Profile.objects.create(**data)
-                serializer = self.serializer_class(profile)
-                return Response(data=serializer.data, status=201)
-        return Response(data=serializer.errors, status=404)
-
-    def put(self, request, *args, **kwargs):
-        ...
+        except Profile.DoesNotExist as e:
+            return Response(
+                data={
+                    'detail': str(e)
+                }, status=status.HTTP_404_NOT_FOUND
+            )
+        return Response(
+            data=serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
     def delete(self, request, *args, **kwargs):
-        ...
+        user = request.user
+        user.is_active = False
+        user.save()
+        response = Response(status=status.HTTP_204_NO_CONTENT)
+        response['X-Message'] = 'User has been deleted!'
+        return response

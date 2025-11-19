@@ -4,7 +4,8 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
-    primary_email = models.CharField(max_length=255, unique=True)
+    username = None
+    primary_email = models.EmailField(unique=True)
 
     USERNAME_FIELD = 'primary_email'
     REQUIRED_FIELDS = []
@@ -42,7 +43,7 @@ class Email(models.Model):
     Модель для хранения всех Email,
     когда-либо засветившихся в системе при регистрации или смене
     """
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     is_confirmed = models.BooleanField(default=False, blank=True)
     is_active = models.BooleanField(default=False, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -58,9 +59,13 @@ class Email(models.Model):
         verbose_name_plural = 'Emails'
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'is_active'],
+                fields=['user', 'is_active', 'is_confirmed'],
                 name='unique_active_email_per_user',
-                condition=models.Q(is_active=True)  # только для подтвержденных email
+                condition=models.Q(is_active=True, is_confirmed=True)  # только для подтвержденных email
+            ),
+            models.UniqueConstraint(
+                fields=['user', 'email'],
+                name='unique_any_email_per_user'
             )
         ]
 
@@ -74,6 +79,11 @@ class Email(models.Model):
             Email.objects.filter(
                 user=self.user, is_active=True
             ).update(is_active=False)
+
+        # При получении тот же email от другого пользователя
+        # В случае, если он не подтверждён другим пользователем
+        # Отдавать этот email новому пользователю
+        # Пока кто-нибудь этот email не подтвердит
 
         super().save(*args, **kwargs)
 
