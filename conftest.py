@@ -7,17 +7,26 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.accounts.models import User
 
 
-@pytest.fixture
-def get_user():
-    """Фабрика пользователей"""
-    def create_user(**kwargs):
-        defaults = {
-            'email': 'test@example.com',
-            'password': 'testpass123'
-        }
-        defaults.update(kwargs)
-        return User.objects.create(**defaults)
-    return create_user
+@pytest.fixture(scope='class')
+def users_pool():
+    """Пул пользователей"""
+    # pylint: disable=too-few-public-methods
+    class UsersPool:
+        """
+        Создаёт именные атрибуты пользователей
+        """
+        def __init__(self, quantity: int = 1):
+            for i in range(quantity):
+                user_data = {
+                    'email': f'testuser{i + 1}@example.com',
+                    'password': 'testpass123'
+                }
+                setattr(
+                    self, f'user{i + 1}',
+                    User.objects.create(**user_data)
+                )
+
+    return UsersPool
 
 
 @pytest.fixture
