@@ -2,11 +2,9 @@
 import pytest
 from faker import Faker
 
-# from apps.accounts.models import User
+from apps.accounts.models import User
 # from apps.profiles.models import Profile
 
-# Нужна фикстура, которая будет создавать тестового пользователя и авторизовываться
-# Также нужны фабрики фикстур данных
 
 fake = Faker()  # Создаем экземпляр Faker
 Faker.seed(42)  # Для воспроизводимости результатов
@@ -17,20 +15,20 @@ def profile_data():
     """
     Фабрика профилей пользователя для apps.profiles.models.Profile
     """
-    def get_profile(user_id: int, **kwargs):
+    def get_profile(*, for_user: User, is_null=False, **kwargs):
         defaults = {
-            "user_id": user_id,
-            "first_name": fake.first_name(),
-            "last_name": fake.last_name(),
-            "profession": fake.job(),
-            "short_desc": fake.paragraph(3),
-            "full_desc": fake.paragraph(20),
-            "wallpaper": fake.uri_path(),
-            "avatar": fake.uri_path(),
-            "link_to_instagram": f"https://instagram.com/{fake.user_name()}",
-            "link_to_telegram": f"https://t.me/{fake.user_name()}",
-            "link_to_github": f"https://github.com/{fake.user_name()}",
-            "link_to_vk": f"https://vk.com/{fake.user_name()}"
+            "user_id": for_user.pk,
+            "first_name": None if is_null else fake.first_name(),
+            "last_name": None if is_null else fake.last_name(),
+            "profession": None if is_null else fake.job(),
+            "short_desc": None if is_null else fake.paragraph(3),
+            "full_desc": None if is_null else fake.paragraph(20),
+            "wallpaper": None if is_null else fake.uri_path(),
+            "avatar": None if is_null else fake.uri_path(),
+            "link_to_instagram": None if is_null else f"https://instagram.com/{fake.user_name()}",  # noqa: E501 pylint: disable=line-too-long
+            "link_to_telegram": None if is_null else f"https://t.me/{fake.user_name()}",            # noqa: E501 pylint: disable=line-too-long
+            "link_to_github": None if is_null else f"https://github.com/{fake.user_name()}",        # noqa: E501 pylint: disable=line-too-long
+            "link_to_vk": None if is_null else f"https://vk.com/{fake.user_name()}"                 # noqa: E501 pylint: disable=line-too-long
         }
         defaults.update(kwargs)
         return defaults
