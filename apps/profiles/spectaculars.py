@@ -1,15 +1,86 @@
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
-from rest_framework.exceptions import status
 from rest_framework import serializers
+from rest_framework.exceptions import status
+
 from drf_spectacular.utils import (
     inline_serializer, extend_schema, extend_schema_view,
-    OpenApiExample, OpenApiResponse
+    OpenApiExample, OpenApiResponse, OpenApiParameter
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.extensions import OpenApiViewExtension
 
 from apps.profiles.serializers import SelfProfileSerializer, ProfileSerializer
+
+
+PROFILE_PARAMETERS_EXAMPLE = [
+    OpenApiParameter(
+        name="first_name",
+        description="Имя",
+        required=False,
+        type=OpenApiTypes.STR,
+    ),
+    OpenApiParameter(
+        name="last_name",
+        description="Фамилия",
+        required=False,
+        type=OpenApiTypes.STR,
+    ),
+    OpenApiParameter(
+        name="profession",
+        description="Профессия",
+        required=False,
+        type=OpenApiTypes.STR,
+    ),
+    OpenApiParameter(
+        name="short_desc",
+        description="Краткое описание",
+        required=False,
+        type=OpenApiTypes.STR,
+    ),
+    OpenApiParameter(
+        name="full_desc",
+        description="Подробное описание",
+        required=False,
+        type=OpenApiTypes.STR,
+    ),
+    OpenApiParameter(
+        name="wallpaper",
+        description="Ссылка на обои профиля",
+        required=False,
+        type=OpenApiTypes.URI_TPL,
+    ),
+    OpenApiParameter(
+        name="avatar",
+        description="Ссылка на фото профиля",
+        required=False,
+        type=OpenApiTypes.URI_TPL,
+    ),
+    OpenApiParameter(
+        name="link_to_instagram",
+        description="Ссылка на профиль в Инстраграм",
+        required=False,
+        type=OpenApiTypes.URI,
+    ),
+    OpenApiParameter(
+        name="link_to_telegram",
+        description="Ссылка на профиль в Телеграм",
+        required=False,
+        type=OpenApiTypes.URI,
+    ),
+    OpenApiParameter(
+        name="link_to_github",
+        description="Ссылка на профиль в GitHub",
+        required=False,
+        type=OpenApiTypes.URI,
+    ),
+    OpenApiParameter(
+        name="link_to_vk",
+        description="Ссылка на профиль Вконтакте",
+        required=False,
+        type=OpenApiTypes.URI,
+    ),
+]
 
 
 class FixSelfUserProfileView(OpenApiViewExtension):
@@ -39,6 +110,7 @@ class FixSelfUserProfileView(OpenApiViewExtension):
                     "**Требуется аутентификация:** Да  \n"
                     "**Права:** Только для владельца аккаунта"
                 ),
+                parameters=PROFILE_PARAMETERS_EXAMPLE,
                 responses={
                     status.HTTP_200_OK: inline_serializer(
                         name='ProfileUpdated',
