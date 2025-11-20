@@ -152,6 +152,7 @@ SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
     "VERSION": "0.0.1",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
+    'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
     # DESCRIPTION (строка): Краткое описание API.
     # VERSION (строка): Версия API.
@@ -160,6 +161,8 @@ SPECTACULAR_SETTINGS = {
     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
     # SCHEMA_PATH_PREFIX
 }
+
+
 
 SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
