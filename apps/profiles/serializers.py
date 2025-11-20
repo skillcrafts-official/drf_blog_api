@@ -10,6 +10,11 @@ class SelfProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = '__all__'
 
+    def create(self, validated_data):
+        """Устанавливает user из контекста (request.user)"""
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
 
 class ProfileSerializer(serializers.ModelSerializer):
 
