@@ -1,16 +1,17 @@
-from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
-
 from rest_framework import serializers
 from rest_framework.exceptions import status
+from rest_framework.views import APIView
 
 from drf_spectacular.utils import (
     inline_serializer, extend_schema, extend_schema_view,
-    OpenApiExample, OpenApiResponse, OpenApiParameter
+    OpenApiResponse, OpenApiParameter
 )
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.extensions import OpenApiViewExtension
 
 from apps.profiles.serializers import SelfProfileSerializer, ProfileSerializer
+
+from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
 
 PROFILE_PARAMETERS_EXAMPLE = [
@@ -89,7 +90,7 @@ class FixSelfUserProfileView(OpenApiViewExtension):
     """
     target_class = 'apps.profiles.views.SelfUserProfileView'
 
-    def view_replacement(self):
+    def view_replacement(self) -> type[APIView]:
 
         @extend_schema_view(
             get=extend_schema(
@@ -157,16 +158,29 @@ class FixUserProfileView(OpenApiViewExtension):
     def view_replacement(self):
 
         @extend_schema_view(
-            get=extend_schema(
+
+            retrieve=extend_schema(
+                operation_id='profile_rtrieve_by_user',
                 summary="Получить чужой профиль",
                 description=(
+                    "Можно получить данные о другом пользователе "
+                    "по его user_id  \n  \n"
                     "**Требуется аутентификация:** Да  \n"
-                    "**Права:** Для авторизованных пользователей"
+                    "**Права:** Только для владельца аккаунта"
                 ),
                 responses={
                     status.HTTP_200_OK: ProfileSerializer,
                     status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
                 },
+                parameters=[
+                    OpenApiParameter(
+                       name="user",
+                       description="ID пользователя",
+                       required=True,
+                       type=OpenApiTypes.INT,
+                       location=OpenApiParameter.PATH,
+                    ),
+                ],
             )
         )
         # pylint: disable=no-member,inherit-non-class,unnecessary-pass
