@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from rest_framework.exceptions import status
+from rest_framework.exceptions import status  # type: ignore
 from rest_framework.views import APIView
 
 from drf_spectacular.utils import (
@@ -113,12 +113,7 @@ class FixSelfUserProfileView(OpenApiViewExtension):
                 ),
                 parameters=PROFILE_PARAMETERS_EXAMPLE,
                 responses={
-                    status.HTTP_200_OK: inline_serializer(
-                        name='ProfileUpdated',
-                        fields={
-                            'message': serializers.CharField(),
-                        }
-                    ),
+                    status.HTTP_200_OK: SelfProfileSerializer,
                     status.HTTP_400_BAD_REQUEST: inline_serializer(
                         name='ProfileValidationError',
                         fields={
@@ -142,8 +137,7 @@ class FixSelfUserProfileView(OpenApiViewExtension):
                 }
             ),
         )
-        # pylint: disable=no-member,inherit-non-class,unnecessary-pass
-        class Fixed(self.target_class):
+        class Fixed(self.target_class):  # type: ignore
             pass
 
         return Fixed
@@ -183,8 +177,7 @@ class FixUserProfileView(OpenApiViewExtension):
                 ],
             )
         )
-        # pylint: disable=no-member,inherit-non-class,unnecessary-pass
-        class Fixed(self.target_class):
+        class Fixed(self.target_class):  # type: ignore
             pass
 
         return Fixed
