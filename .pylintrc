@@ -1,0 +1,6 @@
+[MESSAGES CONTROL]
+disable=missing-class-docstring,unnecessary-pass,inherit-non-class
+
+[FORMAT]
+# Или для конкретных файлов/паттернов
+ignored-classes=Meta,Fixed
