@@ -4,6 +4,14 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
+    email = None
+    # last_login = None
+    # is_superuser = None
+    # first_name = None
+    # last_name = None
+    # is_staff = None
+    # is_active = None
+    # date_joined = None
     username = None
     primary_email = models.EmailField(unique=True)
 
@@ -33,6 +41,12 @@ class User(AbstractUser):
             raise ValueError("Email does not belong to this user")
         email_instance.is_active = True
         email_instance.save()
+
+    def __iter__(self):
+        # для итерации по полям модели User
+        for field in self._meta.fields:
+            if not field.auto_created:
+                yield field.name, getattr(self, field.name)
 
     def __str__(self):
         return str(self.primary_email)
@@ -108,6 +122,12 @@ class Email(models.Model):
             return "подтвержденный (не активный)"
         else:
             return "не активный"
+
+    def __iter__(self):
+        # для итерации по полям модели User
+        for field in self._meta.fields:
+            if not field.auto_created:
+                yield field.name, getattr(self, field.name)
 
     def __str__(self):
         return f"{self.email} ({self.user})"
