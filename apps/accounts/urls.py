@@ -14,7 +14,7 @@ urlpatterns = [
         name='user_registration'
     ),
     path(
-        'user/<pk>', UserView.as_view({'get': 'retrieve'}),
+        'user/<pk>/', UserView.as_view({'get': 'retrieve'}),
         name='user_info'
     ),
     path(
@@ -26,7 +26,7 @@ urlpatterns = [
         name='change_email'
     ),
     path(
-        'user/<pk>/confirm', UserConfirmView.as_view({'put': 'update'}),
+        'user/<pk>/confirm/', UserConfirmView.as_view({'put': 'update'}),
         name='user_confirm'
     ),
     path(

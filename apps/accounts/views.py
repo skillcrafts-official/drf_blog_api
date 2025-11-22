@@ -1,23 +1,20 @@
 from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
 
-from rest_framework.views import APIView, status
+from rest_framework import status
+from rest_framework.views import APIView
 from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiResponse, OpenApiExample, OpenApiTypes
 from apps.accounts.models import User, Email
 from apps.accounts.serializers import (
     UserSerializer, UserConfirmSerializer,
     UserPasswordSerializer, UserEmailSerializer,
     MyTokenObtainPairSerializer
 )
-
-
-tags = ["user", "email"]
 
 
 class UserView(ModelViewSet):
