@@ -46,8 +46,8 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
 
-class UserConfirmSerializer(serializers.Serializer):
-    primary_email = serializers.CharField(read_only=True)
+class EmailConfirmSerializer(serializers.Serializer):
+    new_email = serializers.EmailField(write_only=True)
     confirm_code = serializers.CharField(write_only=True)
 
     def validate_confirm_code(self, confirm_code):
