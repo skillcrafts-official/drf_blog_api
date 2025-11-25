@@ -3,15 +3,15 @@ from django.db import IntegrityError
 
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView
 from rest_framework.viewsets import ModelViewSet
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from rest_framework_simplejwt.views import TokenObtainPairView
+
 from apps.accounts.models import User, Email
 from apps.accounts.serializers import (
-    UserSerializer, UserConfirmSerializer,
+    UserSerializer, EmailConfirmSerializer,
     UserPasswordSerializer, UserEmailSerializer,
     MyTokenObtainPairSerializer
 )
@@ -23,10 +23,12 @@ class UserView(ModelViewSet):
     lookup_field = 'pk'
 
 
-class UserConfirmView(ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserConfirmSerializer
-    lookup_field = 'pk'
+# class EmailConfirmView(APIView):
+#     serializer_class = EmailConfirmSerializer
+
+#     def put(self, request, *args, **kwargs):
+#         data = request.data
+#         serializer = self.serializer_class(data=data)
 
 
 class UpdateUserPasswordView(APIView):
