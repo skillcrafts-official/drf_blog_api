@@ -1,13 +1,17 @@
 from django.db import models
 
+from rest_framework.exceptions import NotFound, PermissionDenied
+
 from apps.accounts.models import User
 
 
 def user_avatar_path(instance, filename):
+    """Персонализируется путь к аватару пользователя"""
     return f"avatars/user_{instance.user.id}/{filename}"
 
 
 def user_wallpaper_path(instance, filename):
+    """Персонализируется путь к обоям пользователя"""
     return f"wallpapers/user_{instance.user.id}/{filename}"
 
 
@@ -15,11 +19,11 @@ class Profile(models.Model):
     """
     Модель для профиля пользователя
     """
-    first_name = models.CharField(max_length=20, null=True, blank=True)
-    last_name = models.CharField(max_length=20, null=True, blank=True)
-    profession = models.CharField(max_length=50, null=True, blank=True)
-    short_desc = models.CharField(max_length=300, null=True, blank=True)
-    full_desc = models.TextField(null=True, blank=True)
+    first_name = models.CharField(max_length=20, default='', blank=True)
+    last_name = models.CharField(max_length=20, default='', blank=True)
+    profession = models.CharField(max_length=50, default='', blank=True)
+    short_desc = models.CharField(max_length=300, default='', blank=True)
+    full_desc = models.TextField(default='', blank=True)
 
     wallpaper = models.ImageField(
         upload_to=user_wallpaper_path, null=True, blank=True
@@ -28,10 +32,10 @@ class Profile(models.Model):
         upload_to=user_avatar_path, null=True, blank=True
     )
 
-    link_to_instagram = models.URLField(null=True, blank=True)
-    link_to_telegram = models.URLField(null=True, blank=True)
-    link_to_github = models.URLField(null=True, blank=True)
-    link_to_vk = models.URLField(null=True, blank=True)
+    link_to_instagram = models.URLField(default='', blank=True)
+    link_to_telegram = models.URLField(default='', blank=True)
+    link_to_github = models.URLField(default='', blank=True)
+    link_to_vk = models.URLField(default='', blank=True)
 
     user = models.OneToOneField(
         User,
@@ -44,5 +48,30 @@ class Profile(models.Model):
         verbose_name = 'Профиль пользователя'
         verbose_name_plural = 'Профили пользователей'
 
+    def __iter__(self):
+        for field in self._meta.fields:  # pylint: disable=no-member
+            if not field.auto_created:
+                yield field.name, getattr(self, field.name)
+
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
+
+    @classmethod
+    def get_profile(cls, user_id):
+        """Получаем профиль по user_id"""
+        try:
+            profile = cls.objects.get(user_id=user_id)
+        except cls.DoesNotExist:
+            profile = None
+
+        if profile is None:
+            raise NotFound(
+                detail="Profile not found"
+            )
+
+        return profile
+
+    def delete(self, using=None, keep_parents=False):
+        # user = User.objects.get(pk=self.user)
+        self.user.is_active = False
+        self.user.save()
