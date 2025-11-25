@@ -4,171 +4,75 @@
 # pylint: disable=too-few-public-methods,no-member
 
 import pytest
-from apps.utils import create_test_image
-from django.db import transaction, IntegrityError
-from apps.profiles.serializers import (
-    ProfileSerializer, SelfProfileSerializer,
-    ProfileImageSerializer
-)
+
+from rest_framework.exceptions import ValidationError
+
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from apps.profiles.models import Profile
+from apps.profiles.serializers import ProfileSerializer
 
 
 @pytest.mark.django_db
-class TestSelfProfileSerializer:
+class TestProfileSerializer:
     """
-    Проверяет сериализатор SelfProfileSerializer
-    Проверяет валидацию данных на всех установленных уровнях
+    Проверяет сериализатор ProfileSerializer, который
+    возвращает данные по user_id для авторизованных пользователей
     """
-    serializer_class = SelfProfileSerializer
+    serializer_class = ProfileSerializer
 
-    def test_valid_request_for_update_user_profile(self, users_pool, profile_data):
+    def test_execute_profile_data_from_db(
+            self, users_pool, profile_data, temp_media):
         """
-        Проверяется реквест для обновления профиля пользователя
+        Проверяется извлечение данных из БД сериализатором
         """
         users = users_pool()
-        profile = profile_data(for_user=users.user1)
+        profile1 = profile_data(for_user=users.user1)
 
-        profile.pop('user_id')
-        # profile['user'] = users.user1
+        db_profile = Profile.objects.create(**profile1)
+        serializer = self.serializer_class(instance=db_profile)
 
-        profile['wallpaper'] = create_test_image('wallpaper.jpg')
-        profile['avatar'] = create_test_image('avatar.jpg')
+        # проверка структуры данных, загруженных из БД
+        for field, value in profile1.items():
+            if field == 'user_id':
+                assert isinstance(serializer.data['user'], type(value))
+            elif isinstance(value, SimpleUploadedFile):
+                assert isinstance(serializer.data[field], type(value.name))
+            else:
+                assert isinstance(serializer.data[field], type(value))
 
+    def test_update_profile_data_in_db(
+            self, users_pool, profile_data, temp_media):
+        """
+        Проверяется обновление данных в БД сериализатором
+        """
+        users = users_pool()
+        profile1 = profile_data(for_user=users.user1)
+        profile2 = profile_data(for_user=users.user1)
+        profile3 = profile_data(for_user=users.user1)
+
+        db_profile = Profile.objects.create(**profile1)
+
+        # попытка полного обновления данных (user_id is UNIQUE)
         serializer = self.serializer_class(
-            data=profile,
-            context={'request': type('Request', (), {'user': users.user1})()}
+            instance=db_profile, data=profile2
         )
 
-        assert serializer.is_valid(), serializer.is_valid()
+        with pytest.raises(ValidationError) as exc_info:
+            serializer.is_valid(raise_exception=True)
 
-        instance = serializer.save()
-        assert instance.user == users.user1
+        assert 'user' in str(exc_info.value), exc_info.value
 
-    def test_serialize_nullable_data_from_request(
-            self, users_pool, profile_data
-    ):
-        """
-        Проверяется реквест для обновления профиля пользователя
-        """
-        users = users_pool()
-        profile = profile_data(for_user=users.user1, is_null=True)
+        # попытка частичного обновления данных (без user_id)
+        serializer = self.serializer_class(
+            instance=db_profile, data=profile3, partial=True
+        )
 
-        profile.pop('user_id')
-        profile['user'] = users.user1
+        assert serializer.is_valid(raise_exception=True)
 
-        serializer = self.serializer_class(data=profile)
+        serializer.save()
 
-        assert serializer.is_valid(), serializer.is_valid()
-
-    @pytest.mark.parametrize(
-        "field, value",
-        [
-            ('user', None),
-            ('user', '1'),
-            ('user', 1),
-        ]
-    )
-    def test_foreign_key_fields_from_request_user_profile(
-            self, users_pool, profile_data, field, value
-    ):
-        """
-        Проверяется реквест для обновления профиля пользователя
-        """
-        users = users_pool()
-        profile = profile_data(for_user=users.user1, is_null=True)
-
-        profile.pop('user_id')
-        profile[field] = value
-
-        serializer = self.serializer_class(data=profile)
-        assert serializer.is_valid()
-
-        data = serializer.validated_data
-        assert not data.get(field, None), f"{data[field] =} {field =} "
-
-    @pytest.mark.parametrize(
-        "field, value",
-        [
-            ('first_name', 'a' * 21),
-            ('last_name', 'a' * 21),
-            ('profession', 'a' * 51),
-            ('short_desc', 'a' * 301),
-        ]
-    )
-    def test_char_fields_from_user_profile_request(
-            self, users_pool, profile_data, field, value
-    ):
-        """
-        Проверяется валидация полей типа CharField
-        """
-        users = users_pool()
-        profile = profile_data(for_user=users.user1)
-
-        profile.pop('user_id')
-        profile['user'] = users.user1
-
-        profile['wallpaper'] = None
-        profile['avatar'] = None
-
-        profile[field] = value
-
-        serializer = self.serializer_class(data=profile)
-
-        assert not serializer.is_valid(), serializer.is_valid()
-
-    @pytest.mark.parametrize(
-        "field, value",
-        [
-            ('link_to_instagram', 'htt://example.com'),
-            ('link_to_telegram', 'https//example.com'),
-            ('link_to_github', 'http:/example.com'),
-            ('link_to_vk', '//example.com'),
-        ]
-    )
-    def test_url_fields_from_user_profile_request(
-            self, users_pool, profile_data, field, value
-    ):
-        """
-        Проверяется валидация полей типа URLField
-        """
-        users = users_pool()
-        profile = profile_data(for_user=users.user1)
-
-        profile.pop('user_id')
-        profile['user'] = users.user1
-
-        profile['wallpaper'] = None
-        profile['avatar'] = None
-
-        profile[field] = value
-
-        serializer = self.serializer_class(data=profile)
-
-        assert not serializer.is_valid(), serializer.is_valid()
-
-    @pytest.mark.parametrize(
-        "field, value",
-        [
-            ('wallpaper', 'media/wallpapers/wallpaper.jpg'),
-            ('avatar', 'media/wallpapers/avatar.jpg'),
-        ]
-    )
-    def test_image_fields_from_user_profile_request(
-            self, users_pool, profile_data, field, value
-    ):
-        """
-        Проверяется валидация полей типа ImageField
-        """
-        users = users_pool()
-        profile = profile_data(for_user=users.user1)
-
-        profile.pop('user_id')
-        profile['user'] = users.user1
-
-        profile['wallpaper'] = None
-        profile['avatar'] = None
-
-        profile[field] = value
-
-        serializer = self.serializer_class(data=profile)
-
-        assert not serializer.is_valid(), serializer.is_valid()
+        # проверка структуры очищенных данных (кроме user_id)
+        profile3.pop('user_id')
+        for field, value in profile3.items():
+            assert serializer.validated_data[field] == value

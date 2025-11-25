@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -26,8 +27,7 @@ SECRET_KEY = 'django-insecure-m&l@okn!&gh*&j)d8sn50j1@c)1(5%50!mb#*r!_3k-_=%+6(g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'apps.accounts', 'apps.profiles'
+    'apps.accounts', 'apps.profiles',
+    'django_cleanup.apps.CleanupConfig',
 ]
 
 MIDDLEWARE = [
@@ -82,9 +83,17 @@ WSGI_APPLICATION = 'drf_blog_api.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
+    # }
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
+        'USER': os.getenv('DB_USER', 'drf_blog_api'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
@@ -146,11 +155,14 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
 }
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
-    "VERSION": "0.0.1",  # версия проекта
+    "VERSION": "2025.11.0",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
     'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
@@ -160,8 +172,15 @@ SPECTACULAR_SETTINGS = {
     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
     # SCHEMA_PATH_PREFIX
+    # Добавьте эти настройки для JWT
+    # 'SCHEMA_PATH_PREFIX': '/auth/',
+    # 'COMPONENT_SPLIT_REQUEST': True,
+    
+    # # Явно укажите методы для токен эндпоинтов
+    # 'PREPROCESSING_HOOKS': [
+    #     'drf_spectacular.hooks.preprocess_exclude_path_format',
+    # ],
 }
-
 
 
 SIMPLE_JWT = {

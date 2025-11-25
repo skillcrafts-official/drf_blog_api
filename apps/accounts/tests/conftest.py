@@ -45,7 +45,7 @@ def emails_pool():
                 for i in range(quantity):
                     email_data = {
                         'email': f'testuser{i + 1}@example.com',
-                        'user': user.pk
+                        'user': user
                     }
                     setattr(
                         self, f'email{i + 1}',
