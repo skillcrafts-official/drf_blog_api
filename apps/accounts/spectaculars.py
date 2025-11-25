@@ -14,6 +14,8 @@ from drf_spectacular.utils import (
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.extensions import OpenApiViewExtension
 
+from apps.accounts.serializers import UserSerializer, EmailConfirmSerializer, MyTokenObtainPairSerializer
+
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
 
@@ -125,13 +127,18 @@ class FixUserView(OpenApiViewExtension):
                 description=(
                     "Выдаётся списко всех активных "
                     "подтверждённых пользователей  \n  \n"
-                    "**Пока доступно всем, но в будущем только Админам**"
-                )
+                    "**Доступно всем зарегистрированным пользователям**"
+                ),
+                responses={
+                    status.HTTP_200_OK: UserSerializer,
+                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED
+                }
             ),
             retrieve=extend_schema(
                 summary="Получить данные пользователя",
                 description=(
-                    "Получение аутентификационных данных о пользователе  \n  \n"
+                    "Получение данных аутентификации пользователя "
+                    "(кроме пароля)  \n  \n"
                     "**Пока доступно всем, но в будущем только Админам**"
                 ),
                 parameters=[
@@ -159,11 +166,11 @@ class FixUserView(OpenApiViewExtension):
         return Fixed
 
 
-class FixUserConfirmView(OpenApiViewExtension):
+class FixEmailConfirmView(OpenApiViewExtension):
     """
-    Фиксируется документация для UserConfirmView
+    Фиксируется документация для EmailConfirmView
     """
-    target_class = 'apps.accounts.views.UserConfirmView'
+    target_class = 'apps.accounts.views.EmailConfirmView'
 
     def view_replacement(self) -> type[ModelViewSet]:
 
@@ -175,21 +182,7 @@ class FixUserConfirmView(OpenApiViewExtension):
                     "через код отправленный на указанный Email  \n  \n"
                     "**Публичный метод, доступен всем**"
                 ),
-                parameters=[
-                    OpenApiParameter(
-                       name="id",
-                       description="ID пользователя",
-                       required=True,
-                       type=OpenApiTypes.INT,
-                       location=OpenApiParameter.PATH,
-                    ),
-                    OpenApiParameter(
-                       name="confirm_code",
-                       description="Код подтверждения",
-                       required=True,
-                       type=OpenApiTypes.STR,
-                    ),
-                ],
+                request=EmailConfirmSerializer
             )
         )
         # pylint: disable=missing-class-docstring
@@ -211,7 +204,14 @@ class FixMyTokenObtainPairView(OpenApiViewExtension):
             post=extend_schema(
                 summary="Получить токены",
                 description="JWT авторизация пользователя",
-                tags=["user_token"]
+                # request=MyTokenObtainPairSerializer,
+                request=inline_serializer(
+                    name='getJWT',
+                    fields={
+                        'primary_email': serializers.EmailField(),
+                        'password': serializers.CharField()
+                    }
+                ),
             )
         )
         # pylint: disable=missing-class-docstring
@@ -232,7 +232,6 @@ class FixTokenRefreshView(OpenApiViewExtension):
         @extend_schema_view(
             post=extend_schema(
                 summary="Обновить токены",
-                tags=["user_token"]
             )
         )
         # pylint: disable=missing-class-docstring
@@ -253,7 +252,6 @@ class FixTokenVerifyView(OpenApiViewExtension):
         @extend_schema_view(
             post=extend_schema(
                 summary="Проверить токены",
-                tags=["user_token"]
             )
         )
         # pylint: disable=missing-class-docstring
