@@ -1,0 +1,41 @@
+version: '2025.11.0'
+
+services:
+  drf_psql:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=drf_blog_api
+      - POSTGRES_PASSWORD=drf_blog_api
+      - POSTGRES_DB=drf_blog_api
+    ports:
+      - "5432:5432"  # Добавляем порт для отладки
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drf_blog_api -d drf_blog_api"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.API
+    command: >
+      sh -c "sleep 10 && 
+             python manage.py migrate && 
+             python manage.py runserver 0.0.0.0:8888"
+    ports:
+      - "8888:8888"
+    environment:
+      - DB_HOST=drf_psql
+      - DB_NAME=drf_blog_api
+      - DB_USER=drf_blog_api
+      - DB_PASSWORD=drf_blog_api
+      - DB_PORT=5432
+    depends_on:
+      drf_psql:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
