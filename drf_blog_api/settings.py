@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'apps.accounts', 'apps.profiles',
+    'apps.accounts', 'apps.profiles', 'apps.posts'
     'django_cleanup.apps.CleanupConfig',
 ]
 
@@ -83,18 +83,18 @@ WSGI_APPLICATION = 'drf_blog_api.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
-        'USER': os.getenv('DB_USER', 'drf_blog_api'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
+    #     'USER': os.getenv('DB_USER', 'drf_blog_api'),
+    #     'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
+    #     'HOST': os.getenv('DB_HOST', 'localhost'),
+    #     'PORT': os.getenv('DB_PORT', '5432'),
+    # }
 }
 
 

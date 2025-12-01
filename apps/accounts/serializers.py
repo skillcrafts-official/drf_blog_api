@@ -1,6 +1,10 @@
+from typing import Any
 from django.contrib.auth.hashers import make_password
+
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.tokens import Token
+
 from apps.accounts.models import User, Email
 from apps.profiles.models import Profile
 
@@ -88,15 +92,23 @@ class UserEmailSerializer(serializers.ModelSerializer):
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
+    def validate(self, attrs: dict[str, Any]) -> dict[str, str]:
+        data = super().validate(attrs)
+
+        data['user_id'] = self.user.pk
+
+        return data
+
     @classmethod
-    def get_token(cls, user):
+    def get_token(cls, user: User) -> Token:
         token = super().get_token(user)
 
-        # if user.is_staff:
-        #     token['group'] = 'admin'
-        # else:
-        #     token['group'] = 'user'
-        #     token['role'] = user.account_type
+        token['user_id'] = user.pk
+        if user.is_staff:
+            token['group'] = 'admin'
+        else:
+            token['group'] = 'user'
+            # token['role'] = user.account_type
 
         return token
 
