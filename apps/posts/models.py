@@ -1,3 +1,4 @@
+from turtle import mode
 from django.db import models
 from django.utils import timezone
 
@@ -88,6 +89,7 @@ class Post(BaseModel):
     class Meta:
         verbose_name = 'Статья'
         verbose_name_plural = 'Статьи'
+        ordering = ['-created_at']
 
     def __str__(self):
         return str(self.title)
@@ -121,6 +123,7 @@ class PostComment(BaseModel):
     class Meta:
         verbose_name = 'Комментарий к статье'
         verbose_name_plural = 'Комментарии к статье'
+        ordering = ['-created_at']
 
     def __str__(self):
         return str(self.comment)
@@ -131,6 +134,7 @@ class PostImage(BaseModel):
     image = models.ImageField(
         upload_to=post_images_path, null=True, blank=True
     )
+    is_wallpaper = models.BooleanField(default=False, blank=True)
 
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE, related_name='images'
