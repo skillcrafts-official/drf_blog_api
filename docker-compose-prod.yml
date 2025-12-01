@@ -27,7 +27,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn ваш_проект.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2"
+             gunicorn drf_blog_api.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2"
     # Меняем порт на стандартный для Django
     ports:
       - "127.0.0.1:8000:8000"  # ⚠️ ТОЛЬКО localhost, не наружу!
