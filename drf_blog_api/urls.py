@@ -33,6 +33,7 @@ urlpatterns = [
     ),
     path('', include('apps.accounts.urls')),
     path('profiles/', include('apps.profiles.urls')),
+    path('posts/', include('apps.posts.urls'))
 ]
 
 if settings.DEBUG:
