@@ -33,6 +33,8 @@ services:
       - DB_USER=drf_blog_api
       - DB_PASSWORD=drf_blog_api
       - DB_PORT=5432
+    env_file:
+      - .env  # или указывайте конкретные файлы
     depends_on:
       drf_psql:
         condition: service_healthy

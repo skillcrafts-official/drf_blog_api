@@ -12,7 +12,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from datetime import timedelta
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,13 +23,31 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# Загрузка .env
+load_dotenv()
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-m&l@okn!&gh*&j)d8sn50j1@c)1(5%50!mb#*r!_3k-_=%+6(g'
+SECRET_KEY = os.getenv('SECRET_KEY')
+
+if not SECRET_KEY:
+    # Для разработки - генерируем каждый раз
+    # Для продакшена - это вызовет ошибку (и это правильно!)
+    from django.core.management.utils import get_random_secret_key
+    SECRET_KEY = get_random_secret_key()
+    print(f"⚠️  ВНИМАНИЕ: Используется сгенерированный SECRET_KEY: {SECRET_KEY[:20]}...")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 't')
 
-ALLOWED_HOSTS = ['*']
+# Разрешённые хосты
+allowed_hosts_str = os.getenv('ALLOWED_HOSTS', '')
+if allowed_hosts_str:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
+else:
+    # В разработке разрешаем всё, в продакшене только указанные хосты
+    ALLOWED_HOSTS = ['*'] if DEBUG else []
+    if not DEBUG:
+        print("⚠️  ВНИМАНИЕ: ALLOWED_HOSTS не установлен для продакшена!")
 
 
 # Application definition
@@ -84,18 +104,19 @@ WSGI_APPLICATION = 'drf_blog_api.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
     # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
-    #     'USER': os.getenv('DB_USER', 'drf_blog_api'),
-    #     'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
-    #     'HOST': os.getenv('DB_HOST', 'localhost'),
-    #     'PORT': os.getenv('DB_PORT', '5432'),
+    #     'ENGINE': 'django.db.backends.sqlite3',
+    #     'NAME': BASE_DIR / 'db.sqlite3',
     # }
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
+        'USER': os.getenv('DB_USER', 'drf_blog_api'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
+        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'CONN_MAX_AGE': 300,
+    }
 }
 
 

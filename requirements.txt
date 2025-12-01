@@ -7,11 +7,13 @@ Django==5.2.7
 django-autoslug==1.9.9
 django-cleanup==9.0.0
 django-cors-headers==4.9.0
+django-filter==25.2
 django-stubs==5.2.7
 django-stubs-ext==5.2.7
 djangorestframework==3.16.1
 djangorestframework-stubs==3.16.5
 djangorestframework_simplejwt==5.5.1
+dotenv==0.9.9
 drf-spectacular==0.28.0
 Faker==38.2.0
 idna==3.11
@@ -27,6 +29,7 @@ Pygments==2.19.2
 PyJWT==2.10.1
 pytest==9.0.1
 pytest-django==4.11.1
+python-dotenv==1.2.1
 PyYAML==6.0.3
 referencing==0.37.0
 requests==2.32.5
