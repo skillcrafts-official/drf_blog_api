@@ -21,7 +21,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: ./Dockerfile.API
+      dockerfile: ./Dockerfile.prod
     container_name: drf_web
     restart: unless-stopped
     command: >

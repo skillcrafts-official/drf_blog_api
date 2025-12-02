@@ -1,0 +1,38 @@
+FROM python:3.12-alpine
+
+# Устанавливаем переменные окружения
+ENV APP_HOME=/app \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+# Создаем директорию приложения
+RUN mkdir -p $APP_HOME
+WORKDIR $APP_HOME
+
+# Устанавливаем системные зависимости для PostgreSQL и сборки
+RUN apk update && \
+    apk add --no-cache \
+    postgresql-dev \
+    gcc \
+    python3-dev \
+    musl-dev \
+    libffi-dev \
+    netcat-openbsd
+
+# Копируем и устанавливаем Python зависимости
+COPY requirements.txt .
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Копируем весь проект
+COPY . .
+
+# Создаем пользователя для безопасности (опционально, но может мешать с правами)
+# RUN adduser -D -u 1000 drf_user && \
+#     chown -R drf_user:drf_user $APP_HOME
+# USER drf_user
+
+# Открываем порт
+EXPOSE 8000
+
+ENTRYPOINT ["/app/entrypoint.sh"]
