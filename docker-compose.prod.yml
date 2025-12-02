@@ -29,8 +29,8 @@ services:
              python manage.py collectstatic --noinput &&
              gunicorn drf_blog_api.wsgi:application --bind 0.0.0.0:8000 --workers 3 --threads 2"
     # Меняем порт на стандартный для Django
-    ports:
-      - "127.0.0.1:8000:8000"  # ⚠️ ТОЛЬКО localhost, не наружу!
+    # ports:
+    #   - "127.0.0.1:8000:8000"  # ⚠️ ТОЛЬКО localhost, не наружу!
     environment:
       # Передаем все через .env файл
       DB_NAME: blog_db  # Явно указываем

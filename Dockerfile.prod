@@ -33,4 +33,4 @@ COPY . .
 # USER drf_user
 
 # Открываем порт
-EXPOSE 8000
+# EXPOSE 8000
