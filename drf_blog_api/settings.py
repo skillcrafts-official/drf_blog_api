@@ -45,7 +45,12 @@ if allowed_hosts_str:
     ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_str.split(',')]
 else:
     # В разработке разрешаем всё, в продакшене только указанные хосты
-    ALLOWED_HOSTS = ['*'] if DEBUG else []
+    ALLOWED_HOSTS = ['*'] if DEBUG else [
+        'portfolio-blog-api.ru',
+        'www.portfolio-blog-api.ru',
+        'localhost',
+        '127.0.0.1',
+    ]
     if not DEBUG:
         print("⚠️  ВНИМАНИЕ: ALLOWED_HOSTS не установлен для продакшена!")
 
@@ -223,6 +228,7 @@ SIMPLE_JWT = {
 # CORS настройки
 CORS_ALLOWED_ORIGINS = [
     "https://react-blog-kappa-plum.vercel.app",
+    "https://portfolio-blog-api.ru",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "http://localhost:3000",  # если используете другой порт
@@ -254,21 +260,21 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# CSRF настройки для CORS
+# CSRF только для админки и сессионной аутентификации
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'Lax'  # Или 'Strict'
 CSRF_TRUSTED_ORIGINS = [
     "https://react-blog-kappa-plum.vercel.app",
     "https://portfolio-blog-api.ru",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
 ]
 
-# Отключить CSRF для API (если используется SessionAuthentication)
-CSRF_COOKIE_HTTPONLY = False  # Разрешить доступ к CSRF cookie из JS
-CSRF_COOKIE_SAMESITE = 'None'  # Для кросс-доменных запросов
-CSRF_COOKIE_SECURE = True  # Только HTTPS
-
-# Сессионные cookies для кросс-домена
-SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
+# Session cookies (если используете админку)
 SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
