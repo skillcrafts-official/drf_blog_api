@@ -1,198 +1,79 @@
-name: Deploy DRF Blog API
+# Название workflow (отображается в GitHub UI)
+name: Docker Build and Push
 
+# Когда запускать workflow
 on:
+  # 1. При пуше в ветку main
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    branches: 
+      - main
+  
+env:
+  # Константы
+  REGISTRY: ghcr.io
+  DOCKERFILE_PATH: ./Dockerfile
+  PLATFORMS: linux/amd64,linux/arm64
+  # Динамические переменные на основе контекста
+  IMAGE_NAME: ${{ github.repository }}
 
+# Jobs - основные задачи workflow
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
+  build:
+    # Где запускать
+    runs-on: ubuntu-latest  # или ubuntu-22.04, windows-latest, macos-latest
+    # Разрешения (особенно для GitHub Packages)
+    permissions:
+      contents: read      # Чтение кода
+      packages: write     # ОБЯЗАТЕЛЬНО: запись в GitHub Packages
+      id-token: write     # Для OIDC аутентификации (рекомендуется)
+
+    # Переменные окружения для этого job
+    env:
+      BUILD_DATE: ${{ fromJSON('["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]')[github.event.created_at.month - 1] }}
     
+    # Шаги выполнения
     steps:
-    - name: Deploy to Production
-      uses: appleboy/ssh-action@v0.1.5
-      env:
-        # Передаем все секреты как переменные окружения
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-        CORS_ALLOWED_ORIGINS: ${{ secrets.CORS_ALLOWED_ORIGINS }}
-        CSRF_TRUSTED_ORIGINS: ${{ secrets.CSRF_TRUSTED_ORIGINS }}
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        SERVER_HOST: ${{ secrets.SERVER_HOST }}
-        SERVER_USER: ${{ secrets.SERVER_USER }}
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          set -e
-          echo "🚀 STARTING DEPLOYMENT - $(date)"
-          echo "🔑 Using all GitHub secrets for .env"
-          
-          cd /opt/drf_blog_api
-          echo "📁 Directory: $(pwd)"
-          
-          # 1. Получаем код
-          echo "📥 Pulling code..."
-          git fetch origin
-          git reset --hard origin/main
-          echo "✅ Commit: $(git log --oneline -1)"
-          
-          # 2. СОЗДАЕМ .env ИЗ ВСЕХ СЕКРЕТОВ
-          echo "⚙️ Creating .env from GitHub secrets..."
-          
-          # Создаем .env с ВСЕМИ настройками из секретов
-          cat > .env << 'EOF'
-          # Django Settings
-          DEBUG=False
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
-          
-          # Database
-          DB_NAME=${{ secrets.DB_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_HOST=postgres
-          DB_PORT=5432
-          
-          # CORS & Security
-          CORS_ALLOWED_ORIGINS=${{ secrets.CORS_ALLOWED_ORIGINS }}
-          CSRF_TRUSTED_ORIGINS=${{ secrets.CSRF_TRUSTED_ORIGINS }}
-          
-          # Redis (если используется)
-          REDIS_URL=redis://redis:6379/0
-          
-          # Email (если нужно)
-          EMAIL_BACKEND=django.core.mail.backends.console.EmailBackend
-          DEFAULT_FROM_EMAIL=noreply@portfolio-blog-api.ru
-          EOF
-          
-          chmod 600 .env
-          echo "✅ .env created with all secrets"
-          
-          # 3. Проверяем что создалось
-          echo "📋 .env content (safe view):"
-          echo "==============================="
-          cat .env | while read line; do
-            if [[ "$line" == *"PASSWORD"* ]] || [[ "$line" == *"SECRET_KEY"* ]] || [[ "$line" == *"KEY"* ]]; then
-              # Показываем только начало секретных значений
-              key=$(echo "$line" | cut -d= -f1)
-              value=$(echo "$line" | cut -d= -f2-)
-              if [ -n "$value" ]; then
-                echo "${key}=***${value: -4}"  # Показываем последние 4 символа
-              else
-                echo "${key}=(empty)"
-              fi
-            else
-              echo "$line"
-            fi
-          done
-          echo "==============================="
-          
-          # 4. Останавливаем старые контейнеры
-          echo "🐳 Stopping old containers..."
-          docker-compose -f docker-compose.prod.yml down 2>/dev/null || true
-          sleep 3
-          
-          # 5. Собираем образы
-          echo "🔨 Building Docker images..."
-          if ! docker-compose -f docker-compose.prod.yml build --no-cache 2>&1 | tee /tmp/build.log; then
-            echo "❌ Build failed! Logs:"
-            tail -50 /tmp/build.log
-            exit 1
-          fi
-          echo "✅ Build completed"
-          
-          # 6. Запускаем контейнеры
-          echo "🚀 Starting containers..."
-          docker-compose -f docker-compose.prod.yml up -d
-          
-          # 7. Ждем запуска БД
-          echo "⏳ Waiting for services (45 seconds)..."
-          sleep 45
-          
-          # 8. Проверяем контейнеры
-          echo "🔍 Checking containers..."
-          CONTAINERS=$(docker-compose -f docker-compose.prod.yml ps)
-          echo "$CONTAINERS"
-          
-          if ! echo "$CONTAINERS" | grep -q "Up"; then
-            echo "❌ Containers not running! Logs:"
-            docker-compose -f docker-compose.prod.yml logs --tail=50
-            exit 1
-          fi
-          
-          # 9. Миграции (с повторными попытками)
-          echo "📦 Running migrations..."
-          MIGRATION_OK=false
-          for i in {1..5}; do
-            echo "Migration attempt $i/5..."
-            if docker-compose -f docker-compose.prod.yml exec web python manage.py migrate --noinput 2>&1; then
-              echo "✅ Migrations successful"
-              MIGRATION_OK=true
-              break
-            else
-              echo "⚠️ Migration failed, retrying in 15 seconds..."
-              sleep 15
-            fi
-          done
-          
-          if [ "$MIGRATION_OK" = false ]; then
-            echo "❌ All migration attempts failed"
-            docker-compose -f docker-compose.prod.yml logs web --tail=30
-            # Не выходим - возможно миграции уже применены
-          fi
-          
-          # 10. Статика
-          echo "📁 Collecting static files..."
-          docker-compose -f docker-compose.prod.yml exec web python manage.py collectstatic --noinput 2>&1 || \
-            echo "⚠️ Static collection warning"
-          
-          # 11. Перезапуск Nginx
-          echo "🔄 Restarting Nginx..."
-          sudo systemctl restart nginx 2>&1 || \
-            sudo service nginx restart 2>&1 || \
-            echo "⚠️ Nginx restart skipped (check sudo permissions)"
-          
-          # 12. Финальная проверка
-          echo "🏥 Final health check..."
-          sleep 15
-          
-          HEALTH_OK=false
-          for i in {1..10}; do
-            if curl -s -f http://localhost:8000/api/docs/ >/dev/null; then
-              echo "✅ Django responding locally (attempt $i)"
-              HEALTH_OK=true
-              break
-            fi
-            echo "⏳ Waiting for Django... (10 seconds)"
-            sleep 10
-          done
-          
-          # 13. Финальный отчет
-          echo ""
-          echo "📊 ===== DEPLOYMENT REPORT ====="
-          echo "✅ Code updated: $(git log --oneline -1)"
-          echo "✅ .env created from GitHub secrets"
-          echo "✅ Docker containers: $(docker-compose -f docker-compose.prod.yml ps --filter 'status=running' | wc -l) running"
-          echo "✅ Migrations: $([ "$MIGRATION_OK" = true ] && echo "OK" || echo "CHECK NEEDED")"
-          echo "✅ Local Django: $([ "$HEALTH_OK" = true ] && echo "RESPONDING" || echo "NOT RESPONDING")"
-          echo "🌐 External URL: https://portfolio-blog-api.ru"
-          echo "📚 API Docs: https://portfolio-blog-api.ru/api/docs/"
-          echo "🕐 Deployment finished: $(date)"
-          echo ""
-          
-          if [ "$HEALTH_OK" = false ]; then
-            echo "⚠️ WARNING: Django may not be responding"
-            echo "📋 Checking logs:"
-            docker-compose -f docker-compose.prod.yml logs web --tail=30
-            echo ""
-            echo "ℹ️  Run the health-check workflow to verify"
-          fi
-          
-          exit 0
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container  # Использует контейнер для сборки
+
+      - name: Extract Docker metadata
+        id: meta  # Важно: даём ID для обращения к output
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=   # Используем хэш коммита как тег
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      # Вариант A: GitHub Container Registry (GHCR)
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}          # Имя пользователя GitHub
+          password: ${{ secrets.GITHUB_TOKEN }}  # Автоматический токен
+      
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .  # Директория с Dockerfile
+          file: ./Dockerfile.prod  # Путь к Dockerfile
+          platforms: linux/amd64,linux/arm64  # Multi-arch сборка
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+    
+          # Кэширование для ускорения
+          cache-from: type=gha  # Кэш из GitHub Actions
+          cache-to: type=gha,mode=max
+      
+          # Build arguments (переменные сборки)
+          build-args: |
+            BUILD_DATE=${{ github.event.created_at }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ github.ref_name }}
