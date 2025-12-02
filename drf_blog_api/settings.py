@@ -229,7 +229,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 # Или разрешите все origins для разработки (не для продакшена!)
-CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
+# CORS_ALLOW_ALL_ORIGINS = True  # Только для разработки!
 
 # Дополнительные настройки
 CORS_ALLOW_CREDENTIALS = True
