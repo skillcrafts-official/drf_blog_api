@@ -7,11 +7,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
       # - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # опционально
     environment:
-      POSTGRES_USER: ${DB_USER}
+      POSTGRES_USER: blog_user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_DB: blog_db
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U blog_user"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -35,7 +35,7 @@ services:
       # Передаем все через .env файл
       DB_HOST: db
       DB_PORT: 5432
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      DATABASE_URL: postgresql://blog_user:${DB_PASSWORD}@db:5432/blog_db
     env_file:
       - .env  # или .env.production
     depends_on:
