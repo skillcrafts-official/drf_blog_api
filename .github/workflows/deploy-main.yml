@@ -1,101 +1,83 @@
-name: Deploy DRF Blog API
-
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    
-    steps:
-    - name: Deploy to Production
-      uses: appleboy/ssh-action@v0.1.5
-      env:
-        DB_NAME: ${{ secrets.DB_NAME }}
-        DB_USER: ${{ secrets.DB_USER }}
-        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        ALLOWED_HOSTS: ${{ secrets.ALLOWED_HOSTS }}
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          echo "🚀 STARTING DEPLOYMENT - $(date)"
-          
-          cd /opt/drf_blog_api
-          
-          # 1. AGGRESSIVE CLEANUP
-          echo "🧹 STEP 1: Aggressive disk cleanup..."
-          
-          # Останавливаем всё
-          sudo docker-compose -f docker-compose.prod.yml down 2>/dev/null || echo "No containers to stop"
-          
-          # Удаляем ВСЁ в Docker
-          sudo docker system prune -a -f --volumes 2>/dev/null || echo "Docker cleanup failed"
-          
-          # Очищаем старые образы
-          sudo docker images -q | xargs -r sudo docker rmi -f 2>/dev/null || echo "Image removal failed"
-          
-          # Проверяем место
-          echo "💾 Disk space:"
-          df -h | grep "/dev/"
-          
-          # 2. PULL CODE
-          echo "📥 STEP 2: Pulling latest code..."
-          git fetch origin 2>&1 | tail -5
-          git reset --hard origin/main 2>&1 | tail -5
-          
-          # 3. CREATE ENV
-          echo "⚙️ STEP 3: Creating .env file..."
-          cat > .env << 'EOF'
-          DEBUG=False
-          SECRET_KEY=${{ secrets.SECRET_KEY }}
-          ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }},portfolio-blog-api.ru,www.portfolio-blog-api.ru,localhost,127.0.0.1,37.77.105.19
-          DB_NAME=${{ secrets.DB_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_HOST=postgres
-          DB_PORT=5432
-          CORS_ALLOWED_ORIGINS=https://react-blog-kappa-plum.vercel.app,https://portfolio-blog-api.ru
-          CSRF_TRUSTED_ORIGINS=https://portfolio-blog-api.ru
-          EOF
-          chmod 600 .env
-          
-          # 4. BUILD & START
-          echo "🐳 STEP 4: Building and starting containers..."
-          sudo docker-compose -f docker-compose.prod.yml build --no-cache 2>&1 | tail -20
-          sudo docker-compose -f docker-compose.prod.yml up -d 2>&1 | tail -10
-          
-          # 5. WAIT AND RUN COMMANDS
-          echo "⏳ STEP 5: Waiting for startup..."
-          sleep 30
-          
-          echo "📦 STEP 6: Running Django commands..."
-          
-          # Миграции (игнорируем ошибки)
-          sudo docker-compose -f docker-compose.prod.yml exec -T web python manage.py migrate --noinput 2>&1 || \
-            echo "⚠️ Migrations might have failed"
-          
-          # Статика (игнорируем ошибки)
-          sudo docker-compose -f docker-compose.prod.yml exec -T web python manage.py collectstatic --noinput 2>&1 || \
-            echo "⚠️ Static collection might have failed"
-          
-          # 6. RESTART NGINX
-          echo "🔄 STEP 7: Restarting Nginx..."
-          sudo systemctl restart nginx 2>&1 || echo "⚠️ Nginx restart failed"
-          
-          # 7. FINAL STATUS
-          echo "📊 STEP 8: Deployment status..."
-          echo "📅 Time: $(date)"
-          echo "🔗 Commit: $(git log --oneline -1)"
-          echo "🐳 Containers:"
-          sudo docker-compose -f docker-compose.prod.yml ps 2>&1 || echo "⚠️ Cannot list containers"
-          
-          echo ""
-          echo "🎉 DEPLOYMENT PROCESS COMPLETED"
-          echo "ℹ️  Run health-check workflow for verification"
-          exit 0
+script: |
+  echo "🚀 STARTING DEPLOYMENT - $(date)"
+  
+  cd /opt/drf_blog_api
+  
+  # Проверяем права
+  echo "👤 User: $(whoami)"
+  echo "👥 Groups: $(groups)"
+  
+  # 1. AGGRESSIVE CLEANUP (БЕЗ SUDO!)
+  echo "🧹 STEP 1: Aggressive disk cleanup..."
+  
+  # Останавливаем всё
+  docker-compose -f docker-compose.prod.yml down 2>/dev/null || echo "No containers to stop"
+  
+  # Удаляем ВСЁ в Docker
+  docker system prune -a -f --volumes 2>/dev/null || echo "Docker cleanup failed"
+  
+  # Проверяем место
+  echo "💾 Disk space:"
+  df -h | grep "/dev/"
+  
+  # 2. PULL CODE
+  echo "📥 STEP 2: Pulling latest code..."
+  git fetch origin 2>&1 | tail -5
+  git reset --hard origin/main 2>&1 | tail -5
+  
+  # 3. CREATE ENV
+  echo "⚙️ STEP 3: Creating .env file..."
+  cat > .env << 'EOF'
+  DEBUG=False
+  SECRET_KEY=${{ secrets.SECRET_KEY }}
+  ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }},portfolio-blog-api.ru,www.portfolio-blog-api.ru,localhost,127.0.0.1,37.77.105.19
+  DB_NAME=${{ secrets.DB_NAME }}
+  DB_USER=${{ secrets.DB_USER }}
+  DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+  DB_HOST=postgres
+  DB_PORT=5432
+  CORS_ALLOWED_ORIGINS=https://react-blog-kappa-plum.vercel.app,https://portfolio-blog-api.ru
+  CSRF_TRUSTED_ORIGINS=https://portfolio-blog-api.ru
+  EOF
+  chmod 600 .env
+  
+  # 4. BUILD & START (БЕЗ SUDO!)
+  echo "🐳 STEP 4: Building and starting containers..."
+  docker-compose -f docker-compose.prod.yml build --no-cache 2>&1 | tail -20
+  docker-compose -f docker-compose.prod.yml up -d 2>&1 | tail -10
+  
+  # 5. WAIT AND RUN COMMANDS (БЕЗ SUDO!)
+  echo "⏳ STEP 5: Waiting for startup..."
+  sleep 30
+  
+  echo "📦 STEP 6: Running Django commands..."
+  
+  # Миграции
+  docker-compose -f docker-compose.prod.yml exec -T web python manage.py migrate --noinput 2>&1 || \
+    echo "⚠️ Migrations might have failed"
+  
+  # Статика
+  docker-compose -f docker-compose.prod.yml exec -T web python manage.py collectstatic --noinput 2>&1 || \
+    echo "⚠️ Static collection might have failed"
+  
+  # 6. RESTART NGINX (ЭТОТ НУЖЕН SUDO!)
+  echo "🔄 STEP 7: Restarting Nginx..."
+  # Настройте NOPASSWD для systemctl или используйте sudo с паролем из секретов
+  # Вариант A: Настроить NOPASSWD для systemctl
+  # Вариант B: Использовать service вместо systemctl
+  systemctl restart nginx 2>&1 || echo "⚠️ Nginx restart failed - may need sudo config"
+  
+  # Или используйте service (иногда не требует sudo):
+  # service nginx restart 2>&1 || echo "⚠️ Nginx restart failed"
+  
+  # 7. FINAL STATUS
+  echo "📊 STEP 8: Deployment status..."
+  echo "📅 Time: $(date)"
+  echo "🔗 Commit: $(git log --oneline -1)"
+  echo "🐳 Containers:"
+  docker-compose -f docker-compose.prod.yml ps 2>&1 || echo "⚠️ Cannot list containers"
+  
+  echo ""
+  echo "🎉 DEPLOYMENT PROCESS COMPLETED"
+  echo "ℹ️  Run health-check workflow for verification"
+  exit 0
