@@ -254,6 +254,21 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+# CSRF настройки для CORS
+CSRF_TRUSTED_ORIGINS = [
+    "https://react-blog-kappa-plum.vercel.app",
+    "https://portfolio-blog-api.ru",
+]
+
+# Отключить CSRF для API (если используется SessionAuthentication)
+CSRF_COOKIE_HTTPONLY = False  # Разрешить доступ к CSRF cookie из JS
+CSRF_COOKIE_SAMESITE = 'None'  # Для кросс-доменных запросов
+CSRF_COOKIE_SECURE = True  # Только HTTPS
+
+# Сессионные cookies для кросс-домена
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
