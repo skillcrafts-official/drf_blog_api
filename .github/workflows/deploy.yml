@@ -27,10 +27,6 @@ jobs:
       packages: write     # ОБЯЗАТЕЛЬНО: запись в GitHub Packages
       id-token: write     # Для OIDC аутентификации (рекомендуется)
 
-    # Переменные окружения для этого job
-    env:
-      BUILD_DATE: ${{ fromJSON('["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]')[github.event.created_at.month - 1] }}
-    
     # Шаги выполнения
     steps:
       - name: Checkout repository
