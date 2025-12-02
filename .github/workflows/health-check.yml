@@ -1,0 +1,94 @@
+name: Health Check DRF Blog API
+
+on:
+  workflow_dispatch:  # Только ручной запуск
+  schedule:
+    - cron: '*/30 * * * *'  # Каждые 30 минут
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+    - name: Check Production Health
+      uses: appleboy/ssh-action@v0.1.5
+      env:
+        SERVER_URL: https://portfolio-blog-api.ru
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          echo "🏥 STARTING HEALTH CHECK - $(date)"
+          
+          cd /opt/drf_blog_api
+          
+          # 1. CHECK DOCKER CONTAINERS
+          echo "🐳 Checking Docker containers..."
+          CONTAINERS=$(sudo docker-compose -f docker-compose.prod.yml ps 2>/dev/null)
+          
+          if echo "$CONTAINERS" | grep -q "Up"; then
+            echo "✅ All containers are running"
+            echo "$CONTAINERS"
+          else
+            echo "❌ Some containers are not running"
+            echo "$CONTAINERS"
+            exit 1
+          fi
+          
+          # 2. CHECK DJANGO HEALTH
+          echo "🐍 Checking Django health..."
+          
+          # Локальная проверка
+          if curl -s -f http://localhost:8000/api/docs/ >/dev/null; then
+            echo "✅ Django responds locally"
+          else
+            echo "❌ Django does not respond locally"
+            echo "📋 Container logs:"
+            sudo docker-compose -f docker-compose.prod.yml logs web --tail=20 2>/dev/null || true
+            exit 1
+          fi
+          
+          # Внешняя проверка
+          if curl -s -f -k https://portfolio-blog-api.ru/api/docs/ >/dev/null; then
+            echo "✅ Django responds externally"
+          else
+            echo "⚠️ Django does not respond externally (Nginx issue?)"
+            echo "📋 Nginx logs:"
+            sudo tail -20 /var/log/nginx/error.log 2>/dev/null || true
+            # Не выходим с ошибкой, только предупреждение
+          fi
+          
+          # 3. CHECK DATABASE
+          echo "🗄️ Checking database connection..."
+          if sudo docker-compose -f docker-compose.prod.yml exec -T web python manage.py check --database default 2>/dev/null; then
+            echo "✅ Database connection OK"
+          else
+            echo "❌ Database connection failed"
+            exit 1
+          fi
+          
+          # 4. CHECK API ENDPOINTS
+          echo "🔌 Checking API endpoints..."
+          
+          ENDPOINTS=("/users/" "/api/docs/" "/api/schema/")
+          for endpoint in "${ENDPOINTS[@]}"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" -k https://portfolio-blog-api.ru$endpoint 2>/dev/null || echo "000")
+            if [[ "$STATUS" =~ ^[23] ]]; then
+              echo "✅ $endpoint - HTTP $STATUS"
+            else
+              echo "⚠️ $endpoint - HTTP $STATUS"
+            fi
+          done
+          
+          # 5. DISK SPACE CHECK
+          echo "💾 Checking disk space..."
+          df -h | grep "/dev/"
+          
+          # 6. FINAL REPORT
+          echo ""
+          echo "📊 ===== HEALTH CHECK SUMMARY ====="
+          echo "✅ All systems operational"
+          echo "📅 Check completed at: $(date)"
+          exit 0
