@@ -6,16 +6,16 @@ on:
   # 1. При пуше в ветки
   push:
     branches: 
-      - main      # Production сборка
-      - develop   # Development сборка
-      - 'feat/*'  # Любая ветка, начинающаяся с feat/
+      #- main      # Production сборка
+      #- develop   # Development сборка
+      #- 'feat/*'  # Любая ветка, начинающаяся с feat/
     
     # Можно фильтровать по путям файлов
-    paths:
-      - 'src/**'           # Если меняются файлы в src/
-      - 'Dockerfile'       # Если меняется Dockerfile
-      - 'requirements.txt' # Если меняются зависимости
-      - '.github/workflows/**' # Если меняется сам workflow
+    #paths:
+    #  - 'src/**'           # Если меняются файлы в src/
+    #  - 'Dockerfile'       # Если меняется Dockerfile
+    #  - 'requirements.txt' # Если меняются зависимости
+    #  - '.github/workflows/**' # Если меняется сам workflow
 
   # 2. При создании тегов (версий)
   tags:
