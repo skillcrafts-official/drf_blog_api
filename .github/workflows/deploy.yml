@@ -1,0 +1,110 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      env:
+        DB_HOST: localhost
+        DB_PORT: 5432
+        DB_NAME: test_db
+        DB_USER: postgres
+        DB_PASSWORD: postgres
+        REDIS_URL: redis://localhost:6379/0
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      run: |
+        python manage.py test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@v0.1.5
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.SERVER_PORT }}
+        script: |
+          cd /opt/drf_blog_api
+          
+          # Pull latest changes
+          git pull origin main
+          
+          # Create .env file from secrets
+          cat > .env << 'EOF'
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          SECRET_KEY=${{ secrets.SECRET_KEY }}
+          DEBUG=0
+          ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+          REDIS_URL=redis://redis:6379/0
+          EOF
+          
+          # Stop, rebuild and start containers
+          docker-compose -f docker-compose.prod.yml down
+          docker-compose -f docker-compose.prod.yml build --no-cache
+          docker-compose -f docker-compose.prod.yml up -d
+          
+          # Run migrations
+          docker-compose -f docker-compose.prod.yml exec -T web python manage.py migrate
+          
+          # Collect static files
+          docker-compose -f docker-compose.prod.yml exec -T web python manage.py collectstatic --noinput
+          
+          # Restart Nginx
+          sudo systemctl restart nginx
+          
+          # Health check
+          sleep 10
+          curl -f http://localhost:8000/health/ || exit 1
