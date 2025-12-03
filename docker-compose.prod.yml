@@ -47,6 +47,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles  # для Nginx
       - media_volume:/app/media  # если есть медиа
+      - /opt/drf_blog_api/.env:/app/.env:ro
     # healthcheck:
     #   test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]  # нужно создать endpoint
     #   interval: 30s
