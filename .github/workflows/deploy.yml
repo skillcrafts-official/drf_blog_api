@@ -73,3 +73,33 @@ jobs:
             BUILD_DATE=${{ github.event.created_at }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ github.ref_name }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: ${{ needs.build.result == 'success' }}
+    # if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    
+    steps:
+      - name: Deploy to production
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+          IMAGE_FULL: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          
+          ssh -o StrictHostKeyChecking=no -i private_key \
+            ${USER}@${HOST} "
+            # Команды для деплоя на сервере
+            cd /opt/drf_blog_api/
+            echo 'IMAGE_NAME=$IMAGE_FULL' > .env.docker
+            git pull origin main
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker-compose -f docker-compose.prod.yml stop web 2>/dev/null || true
+            docker-compose -f docker-compose.prod.yml rm -f web 2>/dev/null || true
+            docker-compose -f docker-compose.prod.yml --env-file .env.docker up -d web
+            docker system prune -f
+          "
