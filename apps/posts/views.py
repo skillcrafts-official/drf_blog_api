@@ -10,12 +10,17 @@ from rest_framework.exceptions import NotFound
 
 from apps.posts.serializers import (
     PostTagSerializer, PostSerializer, PostCommentSerializer,
-    PostImageSerializer
+    PostImageSerializer, PostCommentsSerializer
 )
 from apps.posts.models import (
     PostTag, Post, PostComment, PostImage
 )
 from apps.posts.filters import django_filters, PostFilters
+
+from drf_spectacular.utils import (
+    inline_serializer, extend_schema, extend_schema_view,
+    OpenApiParameter
+)
 
 
 class BaseModelViewSet(ModelViewSet):
@@ -24,39 +29,43 @@ class BaseModelViewSet(ModelViewSet):
 
 
 class PostTagsView(BaseModelViewSet):
-    serializer_class = PostTagSerializer
-
-    def get_queryset(self) -> QuerySet:
-        return PostTag.objects.filter(post_id=self.kwargs.get('post_id'))
-
-
-class PostTagView(BaseModelViewSet):
     queryset = PostTag.objects.all()
     serializer_class = PostTagSerializer
-    lookup_field = 'pk'
+
+    # def get_queryset(self) -> QuerySet:
+    #     return PostTag.objects.filter(post_id=self.kwargs.get('post_id'))
+
+
+# class PostTagView(BaseModelViewSet):
+#     queryset = PostTag.objects.all()
+#     serializer_class = PostTagSerializer
+#     lookup_field = 'pk'
 
 
 class PostsView(BaseModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
     filterset_class = PostFilters
 
 
 class PostView(BaseModelViewSet):
-    queryset = Post.objects.all()
+    queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
     lookup_field = 'pk'
 
 
 class PostCommentsView(BaseModelViewSet):
-    serializer_class = PostCommentSerializer
+    serializer_class = PostCommentsSerializer
 
     def get_queryset(self) -> QuerySet:
-        return PostComment.objects.filter(post_id=self.kwargs.get('post_id'))
+        return PostComment.objects.filter(
+            post_id=self.kwargs.get('post_id'),
+            is_deleted=False
+        )
 
 
 class PostCommentView(BaseModelViewSet):
-    queryset = PostComment.objects.all()
+    queryset = PostComment.objects.filter(is_deleted=False)
     serializer_class = PostCommentSerializer
     lookup_field = 'pk'
 
