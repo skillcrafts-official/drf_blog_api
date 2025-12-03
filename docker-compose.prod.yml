@@ -6,10 +6,10 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # опционально
-    environment:
-      POSTGRES_USER: blog_user
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: blog_db
+    # environment:
+    #   POSTGRES_USER: blog_user
+    #   POSTGRES_PASSWORD: ${DB_PASSWORD}
+    #   POSTGRES_DB: blog_db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U blog_user"]
       interval: 10s
