@@ -92,7 +92,7 @@ jobs:
           chmod 600 private_key
 
           scp -o StrictHostKeyChecking=no -i private_key \
-            ./docker-compose.prod.yml \
+            docker-compose.prod.yml \
             ${USER}@${HOST}:/opt/drf_blog_api/
           
           ssh -o StrictHostKeyChecking=no -i private_key \
