@@ -108,21 +108,37 @@ WSGI_APPLICATION = 'drf_blog_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
-        'USER': os.getenv('DB_USER', 'drf_blog_api'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'CONN_MAX_AGE': 300,
+# Определяем, запущен ли Docker
+USE_DOCKER_DB = os.getenv('USE_DOCKER_DB', 'False').lower() == 'true'
+
+if USE_DOCKER_DB:
+    # Настройки для Docker PostgreSQL
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'drf_blog_api',
+            'USER': 'drf_blog_api',
+            'PASSWORD': 'drf_blog_api',
+            'HOST': 'localhost',  # localhost, т.к. порт проброшен
+            'PORT': '5433',
+        }
     }
-}
+else:
+    DATABASES = {
+        # 'default': {
+        #     'ENGINE': 'django.db.backends.sqlite3',
+        #     'NAME': BASE_DIR / 'db.sqlite3',
+        # }
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'drf_blog_api'),
+            'USER': os.getenv('DB_USER', 'drf_blog_api'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'drf_blog_api'),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'CONN_MAX_AGE': 300,
+        }
+    }
 
 
 # Password validation
