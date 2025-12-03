@@ -90,11 +90,15 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key
           chmod 600 private_key
+
+          scp -o StrictHostKeyChecking=no -i private_key \
+            ./docker-compose.prod.yml \
+            ${USER}@${HOST}:/opt/drf_blog_api/
           
           ssh -o StrictHostKeyChecking=no -i private_key \
             ${USER}@${HOST} "
             # Команды для деплоя на сервере
-            cd /opt/drf_blog_api
+            cd /opt/drf_blog_api/
             echo 'IMAGE_NAME=$IMAGE_FULL' > .env.docker
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             docker-compose -f docker-compose.prod.yml --env-file .env.docker down web
