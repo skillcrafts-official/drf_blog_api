@@ -213,7 +213,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
-    "VERSION": "2025.11.0",  # версия проекта
+    "VERSION": "2025.12.1",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
     'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
