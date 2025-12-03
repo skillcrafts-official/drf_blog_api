@@ -1,12 +1,6 @@
-from typing import Any
-from urllib import request
-from apps.accounts.models import User
 from django.db.models.query import QuerySet
-from rest_framework.request import Request
-from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound
 
 from apps.posts.serializers import (
     PostTagSerializer, PostSerializer, PostCommentSerializer,
@@ -15,17 +9,11 @@ from apps.posts.serializers import (
 from apps.posts.models import (
     PostTag, Post, PostComment, PostImage
 )
-from apps.posts.filters import django_filters, PostFilters
-
-from drf_spectacular.utils import (
-    inline_serializer, extend_schema, extend_schema_view,
-    OpenApiParameter
-)
+from apps.posts.filters import PostFilters
 
 
 class BaseModelViewSet(ModelViewSet):
-    # permission_classes = [IsAuthenticated]
-    ...
+    permission_classes = [IsAuthenticated]
 
 
 class PostTagsView(BaseModelViewSet):
