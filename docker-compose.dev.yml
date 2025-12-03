@@ -18,7 +18,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: ./Dockerfile.API
+      dockerfile: ./Dockerfile.dev
     command: >
       sh -c "sleep 10 && 
              python manage.py migrate && 
@@ -32,7 +32,7 @@ services:
       - DB_PASSWORD=drf_blog_api
       - DB_PORT=5432
     env_file:
-      - .env  # или указывайте конкретные файлы
+      - .env.dev  # или указывайте конкретные файлы
     depends_on:
       drf_psql:
         condition: service_healthy
