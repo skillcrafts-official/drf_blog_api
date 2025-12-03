@@ -8,7 +8,7 @@ services:
       - POSTGRES_PASSWORD=drf_blog_api
       - POSTGRES_DB=drf_blog_api
     ports:
-      - "5432:5432"  # Добавляем порт для отладки
+      - "5433:5432"  # Добавляем порт для отладки
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U drf_blog_api -d drf_blog_api"]
       interval: 10s
@@ -18,7 +18,7 @@ services:
   web:
     build:
       context: .
-      dockerfile: ./Dockerfile.API
+      dockerfile: ./Dockerfile.dev
     command: >
       sh -c "sleep 10 && 
              python manage.py migrate && 
@@ -30,9 +30,7 @@ services:
       - DB_NAME=drf_blog_api
       - DB_USER=drf_blog_api
       - DB_PASSWORD=drf_blog_api
-      - DB_PORT=5432
-    env_file:
-      - .env  # или указывайте конкретные файлы
+      - DB_PORT=5433
     depends_on:
       drf_psql:
         condition: service_healthy

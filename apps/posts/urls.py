@@ -9,7 +9,7 @@ from apps.posts.views import (
 
 urlpatterns = [
     path(
-        '<int:post_id>/tags/', PostTagsView.as_view({
+        'tags/', PostTagsView.as_view({
             'get': 'list', 'post': 'create'
         }),
         name='get_post_tag_list_or_create_post_tag'
@@ -19,7 +19,9 @@ urlpatterns = [
         name='get_post_list_or_create_one_post'
     ),
     path(
-        '<int:pk>/', PostView.as_view({'get': 'retrieve', 'put': 'update'}),
+        '<int:pk>/', PostView.as_view({
+            'get': 'retrieve', 'put': 'update', 'delete': 'destroy'
+        }),
         name='get_or_update_one_post'
     ),
     path(

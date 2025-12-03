@@ -57,7 +57,13 @@ class Post(BaseModel):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    published_at = models.DateTimeField(null=True, blank=True, db_index=True)
+    published_at = models.DateTimeField(
+        default=None, null=True, blank=True, db_index=True
+    )
+    deleted_at = models.DateTimeField(default=None, null=True, blank=True)
+
+    is_blocked = models.BooleanField(default=False, blank=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
 
     tags = models.ManyToManyField(
         PostTag, related_name='posts', blank=True
@@ -93,6 +99,12 @@ class Post(BaseModel):
     def __str__(self):
         return str(self.title)
 
+    def delete(self, using=None, keep_parents=False):
+        """Мягкое удаление"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
+
 
 class PostComment(BaseModel):
     """Модель для хранения комментариев к статьям"""
@@ -113,7 +125,11 @@ class PostComment(BaseModel):
     )
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
-    published_at = models.DateTimeField(null=True, blank=True)
+    published_at = models.DateTimeField(default=None, null=True, blank=True)
+    deleted_at = models.DateTimeField(default=None, null=True, blank=True)
+
+    is_blocked = models.BooleanField(default=False, blank=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
 
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE, related_name='comments', db_index=True
@@ -126,6 +142,12 @@ class PostComment(BaseModel):
 
     def __str__(self):
         return str(self.comment)
+
+    def delete(self, using=None, keep_parents=False):
+        """Мягкое удаление"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save()
 
 
 class PostImage(BaseModel):
