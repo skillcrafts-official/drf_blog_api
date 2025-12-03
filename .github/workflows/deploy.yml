@@ -94,6 +94,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i private_key \
             ${USER}@${HOST} "
             # Команды для деплоя на сервере
+            cd /opt/drf_blog_api
             echo 'IMAGE_NAME=$IMAGE_FULL' > .env.docker
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             docker-compose -f docker-compose.prod.yml --env-file .env.docker down web
