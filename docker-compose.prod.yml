@@ -19,9 +19,10 @@ services:
       - backend
 
   web:
-    build:
-      context: .
-      dockerfile: ./Dockerfile.prod
+    # build:
+    #   context: .
+    #   dockerfile: ./Dockerfile.prod
+    image: ${IMAGE_NAME}
     container_name: drf_web
     restart: unless-stopped
     command: >
