@@ -32,7 +32,7 @@ services:
     # Меняем порт на стандартный для Django
     ports:
       - "127.0.0.1:8000:8000"  # ⚠️ ТОЛЬКО localhost, не наружу!
-    environment:
+    # environment:
       # Передаем все через .env файл
       # DB_NAME: blog_db  # Явно указываем
       # DB_USER: blog_user  # Явно указываем
