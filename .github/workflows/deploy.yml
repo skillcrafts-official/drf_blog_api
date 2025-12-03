@@ -73,3 +73,30 @@ jobs:
             BUILD_DATE=${{ github.event.created_at }}
             VCS_REF=${{ github.sha }}
             VERSION=${{ github.ref_name }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    # needs: build-and-push
+    # if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    
+    steps:
+      - name: Deploy to production
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          HOST: ${{ secrets.SERVER_HOST }}
+          USER: ${{ secrets.SERVER_USER }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          
+          ssh -o StrictHostKeyChecking=no -i private_key \
+            ${USER}@${HOST} "
+            # Команды для деплоя на сервере
+            cat > .env.docker << EOF
+            IMAGE_NAME=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            EOF
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker-compose -f docker-compose.prod.yml --env-file .env.docker down web
+            docker-compose -f docker-compose.prod.yml --env-file .env.docker up -d web
+            docker system prune -f
+          "
