@@ -75,11 +75,21 @@ def protected_media(request, path):
     print(f"DEBUG: Serving file: {file_path}")
     return FileResponse(open(file_path, 'rb'))
 
+def test_endpoint(request, path):
+    """Просто показывает что запрос дошёл"""
+    from django.http import JsonResponse
+    return JsonResponse({
+        'status': 'OK',
+        'path': path,
+        'method': request.method,
+        'headers': dict(request.headers),
+    })
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += [
+        path('test/<path:path>', test_endpoint),
         re_path(r'^media/(?P<path>.+)$', protected_media),
     ]
 
