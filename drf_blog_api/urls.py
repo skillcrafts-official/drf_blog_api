@@ -44,24 +44,61 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
-# СПЕЦИАЛЬНО для media файлов - добавляем ВНЕ зависимости от DEBUG
-def serve_media(request, path):
-    """Кастомная функция для отдачи media файлов"""
-    document_root = settings.MEDIA_ROOT
+import os
+from django.conf import settings
+from django.http import FileResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+import mimetypes
+
+
+@csrf_exempt
+def serve_media_debug_false(request, path):
+    """
+    View для отдачи медиафайлов при DEBUG=False
+    """
+    # Полный путь к файлу
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
     
     # Проверяем существование файла
-    file_path = os.path.join(document_root, path)
     if not os.path.exists(file_path):
-        from django.http import HttpResponse
         return HttpResponse('File not found', status=404)
     
-    # Используем стандартный serve с отключенной аутентификацией
-    return serve(request, path, document_root=document_root, show_indexes=False)
+    # Проверяем, что файл находится внутри MEDIA_ROOT (безопасность)
+    file_path = os.path.normpath(file_path)
+    media_root = os.path.normpath(settings.MEDIA_ROOT)
+    
+    if not file_path.startswith(media_root):
+        return HttpResponse('Access denied', status=403)
+    
+    # Проверяем, что это файл, а не директория
+    if not os.path.isfile(file_path):
+        return HttpResponse('Not a file', status=403)
+    
+    # Определяем Content-Type
+    content_type, encoding = mimetypes.guess_type(file_path)
+    if content_type is None:
+        content_type = 'application/octet-stream'
+    
+    # Открываем файл в бинарном режиме
+    try:
+        file = open(file_path, 'rb')
+        response = FileResponse(file, content_type=content_type)
+        
+        # Если нужно скачивание, а не просмотр
+        # response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+        
+        # Для изображений - inline (просмотр в браузере)
+        if content_type.startswith('image/'):
+            response['Content-Disposition'] = 'inline'
+            
+        return response
+    except Exception as e:
+        return HttpResponse(f'Error reading file: {str(e)}', status=500)
 
 
 # Добавляем маршрут для media
 urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', serve_media, name='media'),
+    re_path(r'^media/(?P<path>.*)$', serve_media_debug_false, name='serve_media'),
 ]
 
 
