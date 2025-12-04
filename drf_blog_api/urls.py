@@ -15,7 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
@@ -38,3 +39,26 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+# Медиафайлы через Django (для продакшена)
+def protected_serve(request, path):
+    # Логика проверки авторизации
+    if not request.user.is_authenticated:
+        # Проверяем токен из заголовка
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden('Access denied')
+
+        # Здесь можно добавить проверку токена
+        # token = auth_header.split(' ')[1]
+        # ... проверка токена ...
+
+    return serve(request, path, document_root=settings.MEDIA_ROOT)
+
+
+# Добавляем защищенный доступ к медиафайлам
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', protected_serve),
+]
