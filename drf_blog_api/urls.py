@@ -39,59 +39,35 @@ urlpatterns = [
 ]
 
 
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.authentication import JWTAuthentication
 import os
-from django.http import FileResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.http import FileResponse, HttpResponseNotFound
 
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])  # ← простой JWT
+@permission_classes([IsAuthenticated])        # ← требует авторизации
 def protected_media(request, path):
     """
-    path будет содержать всё после /media/
-    Пример: /media/wallpapers/user_2/wallpaper.jpg → path = "wallpapers/user_2/wallpaper.jpg"
+    Отдаёт файлы только авторизованным пользователям с JWT
     """
-    print(f"DEBUG: Got request for /media/{path}")  # Увидим в логах контейнера
-    
-    # 1. Проверяем заголовок Authorization
-    auth_header = request.headers.get('Authorization')
-    if not auth_header:
-        print("DEBUG: No Authorization header")
-        return HttpResponseForbidden('Token required')
-    
-    # 2. Проверяем что токен начинается с "Token "
-    # (пока не проверяем валидность токена, только формат)
-    if not auth_header.startswith('Token '):
-        print(f"DEBUG: Invalid Authorization format: {auth_header[:20]}...")
-        return HttpResponseForbidden('Invalid token format')
-    
-    # 3. Формируем физический путь
-    # path уже содержит "wallpapers/user_2/wallpaper.jpg"
+    # 1. Формируем путь (JWT уже проверил токен)
     file_path = os.path.join('/app/media', path)
-    print(f"DEBUG: Looking for file: {file_path}")
     
-    # 4. Проверяем существует ли файл
+    # 2. Проверяем файл
     if not os.path.exists(file_path):
-        print(f"DEBUG: File not found: {file_path}")
         return HttpResponseNotFound('File not found')
     
-    # 5. Отдаём файл
-    print(f"DEBUG: Serving file: {file_path}")
+    # 3. Отдаём
     return FileResponse(open(file_path, 'rb'))
-
-def test_endpoint(request, path):
-    """Просто показывает что запрос дошёл"""
-    from django.http import JsonResponse
-    return JsonResponse({
-        'status': 'OK',
-        'path': path,
-        'method': request.method,
-        'headers': dict(request.headers),
-    })
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-urlpatterns += [
-    path('test/<path:path>', test_endpoint),
-    re_path(r'^media/(?P<path>.+)$', protected_media),
-]
+else:
+    urlpatterns += [
+        re_path(r'^media/(?P<path>.+)$', protected_media),
+    ]
 
 
 from rest_framework.decorators import api_view
