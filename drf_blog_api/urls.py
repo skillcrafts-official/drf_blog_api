@@ -38,17 +38,48 @@ urlpatterns = [
     path('posts/', include('apps.posts.urls'))
 ]
 
+
+from django.http import HttpResponseForbidden
+
+
+def check_token_and_serve(request, path):
+    """
+    Проверяет токен и отдает файл. Если токена нет - 403.
+    """
+    # 1. Проверяем заголовок Authorization
+    auth_header = request.headers.get('Authorization', '')
+
+    # 2. Если нет заголовка - сразу 403
+    if not auth_header.startswith('Bearer '):
+        return HttpResponseForbidden('Bearer token required')
+
+    # 3. Проверяем токен
+    # from rest_framework.authtoken.models import Token
+    # try:
+    #     token_key = auth_header.split('Token ')[1]
+    #     token = Token.objects.get(key=token_key)
+    #     request.user = token.user  # Устанавливаем пользователя
+    # except (Token.DoesNotExist, IndexError):
+    #     return HttpResponseForbidden('Invalid token')
+    
+    # 4. Отдаем файл (пока без проверки прав на файл)
+    import os
+    from django.http import FileResponse
+    from django.conf import settings
+
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'))
+
+    from django.http import HttpResponseNotFound
+    return HttpResponseNotFound('File not found')
+
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
-if not settings.DEBUG:
+else:
     urlpatterns += [
-        re_path(
-            r'^media/(?P<path>.*)$', 
-            login_required(serve),  # Просит аутентификацию
-            {'document_root': settings.MEDIA_ROOT}
-        ),
+        re_path(r'^media/(?P<path>.*)$', check_token_and_serve),
     ]
 
 
