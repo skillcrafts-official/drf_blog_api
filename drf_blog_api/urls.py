@@ -46,20 +46,23 @@ import os
 from django.http import FileResponse, HttpResponseNotFound
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])  # ← простой JWT
-@permission_classes([IsAuthenticated])        # ← требует авторизации
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def protected_media(request, path):
     """
-    Отдаёт файлы только авторизованным пользователям с JWT
+    Финальная версия с JWT аутентификацией
     """
-    # 1. Формируем путь (JWT уже проверил токен)
+    print(f"PROTECTED MEDIA CALLED for: {path}")
+    print(f"User: {request.user}")
+    print(f"Auth: {request.auth}")
+    
     file_path = os.path.join('/app/media', path)
     
-    # 2. Проверяем файл
     if not os.path.exists(file_path):
+        print(f"File not found: {file_path}")
         return HttpResponseNotFound('File not found')
     
-    # 3. Отдаём
+    print(f"Serving file: {file_path}")
     return FileResponse(open(file_path, 'rb'))
 
 if settings.DEBUG:
