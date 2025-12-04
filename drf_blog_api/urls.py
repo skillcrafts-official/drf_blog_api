@@ -16,10 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
+from django.http import HttpResponseForbidden
 from django.views.static import serve
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.decorators.http import require_GET
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+import os
 
 
 urlpatterns = [
@@ -41,21 +44,28 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
-# Медиафайлы через Django (для продакшена)
+@require_GET
 def protected_serve(request, path):
-    # Логика проверки авторизации
+    # Простая проверка: пользователь должен быть аутентифицирован
     if not request.user.is_authenticated:
-        # Проверяем токен из заголовка
-        auth_header = request.headers.get('Authorization')
-        if not auth_header or not auth_header.startswith('Bearer '):
-            from django.http import HttpResponseForbidden
-            return HttpResponseForbidden('Access denied')
+        return HttpResponseForbidden('Access denied: Authentication required')
 
-        # Здесь можно добавить проверку токена
-        # token = auth_header.split(' ')[1]
-        # ... проверка токена ...
+    # Проверка существования файла (опционально, но рекомендуется)
+    full_path = os.path.join(settings.MEDIA_ROOT, path)
+    if not os.path.exists(full_path):
+        from django.http import Http404
+        raise Http404("File not found")
 
-    return serve(request, path, document_root=settings.MEDIA_ROOT)
+    # Обслуживаем файл
+    response = serve(request, path, document_root=settings.MEDIA_ROOT)
+
+    # Добавляем CORS заголовки
+    origin = request.headers.get('Origin')
+    if origin:
+        response['Access-Control-Allow-Origin'] = origin
+        response['Access-Control-Allow-Credentials'] = 'true'
+
+    return response
 
 
 # Добавляем защищенный доступ к медиафайлам
