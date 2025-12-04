@@ -87,11 +87,11 @@ def test_endpoint(request, path):
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    urlpatterns += [
-        path('test/<path:path>', test_endpoint),
-        re_path(r'^media/(?P<path>.+)$', protected_media),
-    ]
+
+urlpatterns += [
+    path('test/<path:path>', test_endpoint),
+    re_path(r'^media/(?P<path>.+)$', protected_media),
+]
 
 
 from rest_framework.decorators import api_view
