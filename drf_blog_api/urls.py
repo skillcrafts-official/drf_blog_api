@@ -39,47 +39,48 @@ urlpatterns = [
 ]
 
 
-from django.http import HttpResponseForbidden
+import os
+from django.http import FileResponse, HttpResponseForbidden, HttpResponseNotFound
 
-
-def check_token_and_serve(request, path):
+def protected_media(request, path):
     """
-    Проверяет токен и отдает файл. Если токена нет - 403.
+    path будет содержать всё после /media/
+    Пример: /media/wallpapers/user_2/wallpaper.jpg → path = "wallpapers/user_2/wallpaper.jpg"
     """
-    # 1. Проверяем заголовок Authorization
-    auth_header = request.headers.get('Authorization', '')
-
-    # 2. Если нет заголовка - сразу 403
-    if not auth_header.startswith('Bearer '):
-        return HttpResponseForbidden('Bearer token required')
-
-    # 3. Проверяем токен
-    # from rest_framework.authtoken.models import Token
-    # try:
-    #     token_key = auth_header.split('Token ')[1]
-    #     token = Token.objects.get(key=token_key)
-    #     request.user = token.user  # Устанавливаем пользователя
-    # except (Token.DoesNotExist, IndexError):
-    #     return HttpResponseForbidden('Invalid token')
+    print(f"DEBUG: Got request for /media/{path}")  # Увидим в логах контейнера
     
-    # 4. Отдаем файл (пока без проверки прав на файл)
-    import os
-    from django.http import FileResponse
-    from django.conf import settings
-
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
-    if os.path.exists(file_path):
-        return FileResponse(open(file_path, 'rb'))
-
-    from django.http import HttpResponseNotFound
-    return HttpResponseNotFound('File not found')
+    # 1. Проверяем заголовок Authorization
+    auth_header = request.headers.get('Authorization')
+    if not auth_header:
+        print("DEBUG: No Authorization header")
+        return HttpResponseForbidden('Token required')
+    
+    # 2. Проверяем что токен начинается с "Token "
+    # (пока не проверяем валидность токена, только формат)
+    if not auth_header.startswith('Token '):
+        print(f"DEBUG: Invalid Authorization format: {auth_header[:20]}...")
+        return HttpResponseForbidden('Invalid token format')
+    
+    # 3. Формируем физический путь
+    # path уже содержит "wallpapers/user_2/wallpaper.jpg"
+    file_path = os.path.join('/app/media', path)
+    print(f"DEBUG: Looking for file: {file_path}")
+    
+    # 4. Проверяем существует ли файл
+    if not os.path.exists(file_path):
+        print(f"DEBUG: File not found: {file_path}")
+        return HttpResponseNotFound('File not found')
+    
+    # 5. Отдаём файл
+    print(f"DEBUG: Serving file: {file_path}")
+    return FileResponse(open(file_path, 'rb'))
 
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += [
-        re_path(r'^media/(?P<path>.*)$', check_token_and_serve),
+        re_path(r'^media/(?P<path>.+)$', protected_media),
     ]
 
 
