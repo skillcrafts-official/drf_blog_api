@@ -28,7 +28,7 @@ RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
 # 3. Удаляем build-зависимости (уменьшаем размер образа)
-RUN apk del .build-deps
+# RUN apk del .build-deps
 
 # 4. Копируем ТОЛЬКО нужные файлы (используйте .dockerignore)
 COPY . .
