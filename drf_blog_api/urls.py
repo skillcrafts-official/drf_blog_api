@@ -45,25 +45,58 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 import os
 from django.http import FileResponse, HttpResponseNotFound
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
-def protected_media(request, path):
+# views.py - ИСПОЛЬЗУЙТЕ ЭТОТ VIEW ВМЕСТО DRF
+from django.http import FileResponse, HttpResponseForbidden, HttpResponseNotFound
+from django.views.decorators.http import require_GET
+import os
+import jwt
+from django.conf import settings
+
+@require_GET
+def serve_protected_media(request, path):
+    """
+    Отдает файлы с проверкой JWT токена
+    Без DRF декораторов - не будет 406 ошибки
+    """
+    # 1. Проверяем JWT токен
+    auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+    
+    if not auth_header.startswith('Bearer '):
+        return HttpResponseForbidden('Token required')
+    
+    token = auth_header[7:]  # Убираем 'Bearer '
+    
+    # 2. Валидируем JWT (используем те же настройки что и в DRF)
+    try:
+        # Используем те же настройки что и в rest_framework_simplejwt
+        from rest_framework_simplejwt.tokens import AccessToken
+        access_token = AccessToken(token)
+        user_id = access_token['user_id']
+        
+        # Можно дополнительно проверить пользователя
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.get(id=user_id)
+        request.user = user  # Устанавливаем пользователя
+        
+    except Exception as e:
+        print(f"JWT validation error: {e}")
+        return HttpResponseForbidden('Invalid token')
+    
+    # 3. Отдаем файл
     file_path = os.path.join('/app/media', path)
     
     if not os.path.exists(file_path):
         return HttpResponseNotFound('File not found')
     
-    # Определяем content-type по расширению
+    # Определяем content-type
     import mimetypes
-    content_type, encoding = mimetypes.guess_type(file_path)
+    content_type, _ = mimetypes.guess_type(file_path)
     if content_type is None:
         content_type = 'application/octet-stream'
     
     response = FileResponse(open(file_path, 'rb'), content_type=content_type)
-    
-    # Добавляем заголовки для кэширования
-    response['Cache-Control'] = 'public, max-age=86400'  # 24 часа
+    response['Content-Disposition'] = f'inline; filename="{os.path.basename(file_path)}"'
     
     return response
 
@@ -71,7 +104,7 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     urlpatterns += [
-        re_path(r'^media/(?P<path>.+)$', protected_media),
+        re_path(r'^media/(?P<path>.+)$', serve_protected_media),
     ]
 
 
