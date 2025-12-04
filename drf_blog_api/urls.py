@@ -44,50 +44,22 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])  # ← Включаем JWT
-@permission_classes([IsAuthenticated])        # ← Требуем аутентификацию
-def protected_media_view(request, path):
-    """DRF view с JWT аутентификацией для медиафайлов"""
-    
-    # Полный путь к файлу
-    full_path = os.path.join(settings.MEDIA_ROOT, path)
-    
-    # Проверка существования файла
-    if not os.path.exists(full_path):
-        from rest_framework.exceptions import NotFound
-        raise NotFound("File not found")
-    
-    # Открываем файл
-    file = open(full_path, 'rb')
-    
-    # Определяем Content-Type
-    import mimetypes
-    content_type, encoding = mimetypes.guess_type(full_path)
-    if not content_type:
-        content_type = 'application/octet-stream'
-    
-    # Создаем response
-    response = FileResponse(file, content_type=content_type)
-    
-    # CORS заголовки
-    origin = request.headers.get('Origin')
-    if origin:
-        response['Access-Control-Allow-Origin'] = origin
-        response['Access-Control-Allow-Credentials'] = 'true'
-    
-    return response
+def public_media_view(request, path):
+    """Временный view для публичного доступа к media"""
+    file_path = os.path.join(settings.MEDIA_ROOT, path)
+
+    if os.path.exists(file_path):
+        return FileResponse(open(file_path, 'rb'))
+    else:
+        return HttpResponse(status=404)
 
 
 # Добавляем защищенный доступ к медиафайлам
 urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', protected_media_view),
+    re_path(r'^media/(?P<path>.*)$', public_media_view),
 ]
 
 
