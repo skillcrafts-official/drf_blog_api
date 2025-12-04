@@ -44,22 +44,24 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
-from django.http import FileResponse, HttpResponse
+# СПЕЦИАЛЬНО для media файлов - добавляем ВНЕ зависимости от DEBUG
+def serve_media(request, path):
+    """Кастомная функция для отдачи media файлов"""
+    document_root = settings.MEDIA_ROOT
+    
+    # Проверяем существование файла
+    file_path = os.path.join(document_root, path)
+    if not os.path.exists(file_path):
+        from django.http import HttpResponse
+        return HttpResponse('File not found', status=404)
+    
+    # Используем стандартный serve с отключенной аутентификацией
+    return serve(request, path, document_root=document_root, show_indexes=False)
 
 
-def public_media_view(request, path):
-    """Временный view для публичного доступа к media"""
-    file_path = os.path.join(settings.MEDIA_ROOT, path)
-
-    if os.path.exists(file_path):
-        return FileResponse(open(file_path, 'rb'))
-    else:
-        return HttpResponse(status=404)
-
-
-# Добавляем защищенный доступ к медиафайлам
+# Добавляем маршрут для media
 urlpatterns += [
-    re_path(r'^media/(?P<path>.*)$', public_media_view),
+    re_path(r'^media/(?P<path>.*)$', serve_media, name='media'),
 ]
 
 
