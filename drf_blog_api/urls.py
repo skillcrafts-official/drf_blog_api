@@ -49,21 +49,23 @@ from django.http import FileResponse, HttpResponseNotFound
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def protected_media(request, path):
-    """
-    Финальная версия с JWT аутентификацией
-    """
-    print(f"PROTECTED MEDIA CALLED for: {path}")
-    print(f"User: {request.user}")
-    print(f"Auth: {request.auth}")
-    
     file_path = os.path.join('/app/media', path)
     
     if not os.path.exists(file_path):
-        print(f"File not found: {file_path}")
         return HttpResponseNotFound('File not found')
     
-    print(f"Serving file: {file_path}")
-    return FileResponse(open(file_path, 'rb'))
+    # Определяем content-type по расширению
+    import mimetypes
+    content_type, encoding = mimetypes.guess_type(file_path)
+    if content_type is None:
+        content_type = 'application/octet-stream'
+    
+    response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+    
+    # Добавляем заголовки для кэширования
+    response['Cache-Control'] = 'public, max-age=86400'  # 24 часа
+    
+    return response
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
