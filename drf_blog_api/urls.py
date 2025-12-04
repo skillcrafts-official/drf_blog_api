@@ -86,3 +86,24 @@ def check_auth(request):
 urlpatterns += [
     path('api/check-auth/', check_auth),
 ]
+
+
+@api_view(['GET'])
+def debug_media(request, path):
+    """Просто показывает информацию без проверки"""
+    from rest_framework.response import Response
+    import os
+    
+    return Response({
+        'view_called': True,
+        'path': path,
+        'full_path': os.path.join('/app/media', path),
+        'exists': os.path.exists(os.path.join('/app/media', path)),
+        'user': str(request.user) if hasattr(request, 'user') else 'no user',
+        'auth': str(request.auth) if hasattr(request, 'auth') else 'no auth',
+        'headers': dict(request.headers),
+    })
+
+urlpatterns += [
+    re_path(r'^debug-media/(?P<path>.+)$', debug_media),
+]
