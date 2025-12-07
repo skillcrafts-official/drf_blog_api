@@ -269,6 +269,8 @@ SIMPLE_JWT = {
 # CORS настройки
 CORS_ALLOWED_ORIGINS = [
     "https://react-blog-kappa-plum.vercel.app",
+    "https://skillcrafts.ru",
+    "http://46.229.212.120",
     "https://portfolio-blog-api.ru",
     "http://localhost:5173",
     "http://localhost:4173",
