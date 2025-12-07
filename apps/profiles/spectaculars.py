@@ -32,10 +32,26 @@ class FixUserProfileView(OpenApiViewExtension):
                 ),
                 responses={
                     status.HTTP_200_OK: ProfileSerializer,
-                    status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
+                    # status.HTTP_401_UNAUTHORIZED: NOT_AUTHENTICATED,
                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
                 },
             ),
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixUpdateUserProfileView(OpenApiViewExtension):
+    """
+    Фиксируется документация для UpdateUserProfileView
+    """
+    target_class = 'apps.profiles.views.UpdateUserProfileView'
+
+    def view_replacement(self) -> type[APIView]:
+
+        @extend_schema_view(
             post=extend_schema(
                 summary="Обновить свой профиль",
                 description=(

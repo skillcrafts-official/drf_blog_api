@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 
 from apps.profiles.models import Profile
 from apps.profiles.serializers import ProfileSerializer
+from apps.privacy_settings.models import ProfilePrivacySettings
 
 
 class ProfilesView(APIView):
@@ -20,15 +21,26 @@ class ProfilesView(APIView):
 
 
 class UserProfileView(APIView):
-    """Ендпоинты для работы с профилем (CRUD)"""
+    """Выдача профиля"""
     serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated, BasePermission]
 
     def get(self, request, *args, **kwargs):
         """Получение профиля"""
+        user = request.user
         profile = Profile.get_profile(kwargs['pk'])
-        serializer = self.serializer_class(profile)
+        privacy = ProfilePrivacySettings.objects.get(profile=profile)
+        if user and user.is_authenticated and user in privacy.blacklist.all():
+            raise PermissionDenied()
+        serializer = self.serializer_class(
+            profile, context={'request': request}
+        )
         return Response(data=serializer.data, status=200)
+
+
+class UpdateUserProfileView(APIView):
+    """Ендпоинты для обновления профиля"""
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, BasePermission]
 
     def post(self, request, *args, **kwargs):
         """Обновление своего профиля"""

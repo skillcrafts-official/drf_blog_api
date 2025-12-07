@@ -2,7 +2,8 @@ from drf_spectacular.utils import inline_serializer
 
 from rest_framework import serializers
 from rest_framework.exceptions import (
-    AuthenticationFailed, NotAuthenticated, PermissionDenied
+    AuthenticationFailed, NotAuthenticated, PermissionDenied,
+    ValidationError
 )
 
 
@@ -20,6 +21,15 @@ PERMISSION_DENIED = inline_serializer(
     fields={
         'detail': serializers.CharField(
             default=PermissionDenied.default_detail
+        )
+    }
+)
+
+BAD_REQUEST = inline_serializer(
+    name='VALIDATION_ERROR',
+    fields={
+        'detail': serializers.CharField(
+            default=ValidationError.default_detail
         )
     }
 )

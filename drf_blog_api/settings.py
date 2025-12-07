@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'apps.accounts', 'apps.profiles', 'apps.posts',
+    'apps.privacy_settings', 'apps.media_manage',
     'django_cleanup.apps.CleanupConfig',
 ]
 
@@ -213,7 +214,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
-    "VERSION": "2025.12.1",  # версия проекта
+    "VERSION": "2025.12.3",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
     'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
@@ -222,6 +223,10 @@ SPECTACULAR_SETTINGS = {
     # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
+    'ENUM_NAME_OVERRIDES': {
+        # Указываем, что все эти поля используют один Enum
+        'PrivacyEnum': 'apps.privacy_settings.models.PRIVACIES',
+    }
     # SCHEMA_PATH_PREFIX
     # Добавьте эти настройки для JWT
     # 'SCHEMA_PATH_PREFIX': '/auth/',

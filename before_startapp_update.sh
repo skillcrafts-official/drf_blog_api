@@ -12,4 +12,4 @@ echo '"""Tests for app views"""' > test_views.py
 cd ..
 echo '"""Serializers for $PATH_TO_APP"""' > serializers.py
 echo '"""The DRF documentation extends for app $PATH_TO_APP"""' > spectaculars.py
-echo '"""The url routing for app $PATH_TO_APP"""' > url.py
+echo '"""The urls routing for app $PATH_TO_APP"""' > urls.py

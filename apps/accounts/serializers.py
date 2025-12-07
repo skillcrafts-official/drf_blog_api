@@ -7,6 +7,7 @@ from rest_framework_simplejwt.tokens import Token
 
 from apps.accounts.models import User, Email
 from apps.profiles.models import Profile
+from apps.privacy_settings.models import ProfilePrivacySettings
 
 
 class EmailSerializer(serializers.ModelSerializer):
@@ -38,9 +39,8 @@ class UserSerializer(serializers.ModelSerializer):
             is_active=True
         )
         # автоматически добавляется пустой профиль
-        Profile.objects.create(
-            user=user
-        )
+        profile = Profile.objects.create(user=user)
+        permissions = ProfilePrivacySettings.objects.create(profile=profile)
         return user
     
     def create_new_email(self, validated_data):
