@@ -1,7 +1,7 @@
 from django.urls import path
 from apps.posts.views import (
     PostTagsView,  # PostTagView,
-    PostView, PostsView,
+    PostView, PostsView, CreatPostView,
     PostCommentsView, PostCommentView,
     PostImagesView,
 )
@@ -15,8 +15,12 @@ urlpatterns = [
         name='get_post_tag_list_or_create_post_tag'
     ),
     path(
-        '', PostsView.as_view({'get': 'list', 'post': 'create'}),
-        name='get_post_list_or_create_one_post'
+        'list/', PostsView.as_view({'get': 'list'}),
+        name='get_post_list'
+    ),
+    path(
+        'create/', CreatPostView.as_view({'post': 'create'}),
+        name='create_one_post'
     ),
     path(
         '<int:pk>/', PostView.as_view({

@@ -30,13 +30,19 @@ class PostTagsView(BaseModelViewSet):
 #     lookup_field = 'pk'
 
 
-class PostsView(BaseModelViewSet):
+class PostsView(ModelViewSet):
     queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
     filterset_class = PostFilters
 
 
 class PostView(BaseModelViewSet):
+    queryset = Post.objects.filter(is_deleted=False)
+    serializer_class = PostSerializer
+    lookup_field = 'pk'
+
+
+class CreatPostView(BaseModelViewSet):
     queryset = Post.objects.filter(is_deleted=False)
     serializer_class = PostSerializer
     lookup_field = 'pk'
