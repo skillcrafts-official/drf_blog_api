@@ -49,7 +49,7 @@ if not DEBUG:
     # MEDIA URL с HTTPS
     MEDIA_URL = 'https://portfolio-blog-api.ru/media/'
     # Или протокол-агностичный
-    MEDIA_URL = '//portfolio-blog-api.ru/media/'
+    # MEDIA_URL = '//portfolio-blog-api.ru/media/'
 else:
     # РАЗРАБОТКА
     MEDIA_URL = '/media/'
