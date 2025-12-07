@@ -39,6 +39,25 @@ if not SECRET_KEY:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 't')
 
+if not DEBUG:
+    # ПРОДАКШЕН - всегда HTTPS
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # MEDIA URL с HTTPS
+    MEDIA_URL = 'https://portfolio-blog-api.ru/media/'
+    # Или протокол-агностичный
+    MEDIA_URL = '//portfolio-blog-api.ru/media/'
+else:
+    # РАЗРАБОТКА
+    MEDIA_URL = '/media/'
+
+# Важно: USE_X_FORWARDED_HOST и USE_X_FORWARDED_PORT
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
 # Разрешённые хосты
 allowed_hosts_str = os.getenv('ALLOWED_HOSTS', '')
 if allowed_hosts_str:
