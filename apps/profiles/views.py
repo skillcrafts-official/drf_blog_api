@@ -1,6 +1,6 @@
 # pylint: disable=no-member,unused-argument
 
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
@@ -11,13 +11,11 @@ from apps.profiles.serializers import ProfileSerializer
 from apps.privacy_settings.models import ProfilePrivacySettings
 
 
-class ProfilesView(APIView):
-    """Ендпоинты для отображения инфо о пользователе на кленте"""
+class ProfilesView(viewsets.ModelViewSet):
+    """Для выдачи списка профилей"""
+    queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-
-    def get(self, request, *args, **kwargs):
-        """Получение профиля по идентификатору пользователя (ID)"""
-        return Response()
+    lookup_field = 'pk'
 
 
 class UserProfileView(APIView):
