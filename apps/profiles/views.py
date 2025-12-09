@@ -27,7 +27,7 @@ class UserProfileView(APIView):
         """Получение профиля"""
         user = request.user
         profile = Profile.get_profile(kwargs['pk'])
-        privacy = ProfilePrivacySettings.objects.get_or_create(profile=profile)
+        privacy = ProfilePrivacySettings.objects.get(profile=profile)
         if user and user.is_authenticated and user in privacy.blacklist.all():
             raise PermissionDenied()
         serializer = self.serializer_class(
