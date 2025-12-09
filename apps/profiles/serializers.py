@@ -24,7 +24,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         request = self.context.get('request')
 
-        if request:
+        if request and request.user.id != instance.user.id:
             try:
                 privacy_settings = (
                     ProfilePrivacySettings.objects
