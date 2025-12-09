@@ -21,8 +21,8 @@ class Profile(models.Model):
     """
     first_name = models.CharField(max_length=20, default='', blank=True)
     last_name = models.CharField(max_length=20, default='', blank=True)
-    profession = models.CharField(max_length=50, default='', blank=True)
-    short_desc = models.CharField(max_length=300, default='', blank=True)
+    profession = models.CharField(max_length=100, default='', blank=True)
+    short_desc = models.CharField(max_length=1000, default='', blank=True)
     full_desc = models.TextField(default='', blank=True)
 
     wallpaper = models.ImageField(
