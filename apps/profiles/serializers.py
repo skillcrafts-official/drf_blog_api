@@ -39,10 +39,12 @@ class ProfileSerializer(serializers.ModelSerializer):
 
                 access_level = getattr(privacy_settings, field_name, 'all')
 
+                mask_value = '' if field_name in ('avatar', 'wallpaper') else '*****'
+
                 if access_level != 'all' and not request.user.is_authenticated:
-                    representation[field_name] = '*****'
+                    representation[field_name] = mask_value
                 elif access_level == 'nobody' and request.user.is_authenticated:
-                    representation[field_name] = '*****'
+                    representation[field_name] = mask_value
 
             return representation
 
