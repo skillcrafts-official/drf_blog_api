@@ -1,4 +1,5 @@
 # pylint: disable=no-member,unused-argument
+from django.db.models.query import QuerySet
 
 from rest_framework import status, viewsets
 from rest_framework.views import APIView
@@ -13,7 +14,7 @@ from apps.privacy_settings.models import ProfilePrivacySettings
 
 class ProfilesView(viewsets.ModelViewSet):
     """Для выдачи списка профилей"""
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.filter(user__is_active=True)
     serializer_class = ProfileSerializer
     lookup_field = 'pk'
 
@@ -26,7 +27,7 @@ class UserProfileView(APIView):
         """Получение профиля"""
         user = request.user
         profile = Profile.get_profile(kwargs['pk'])
-        privacy = ProfilePrivacySettings.objects.get(profile=profile)
+        privacy = ProfilePrivacySettings.objects.get_or_create(profile=profile)
         if user and user.is_authenticated and user in privacy.blacklist.all():
             raise PermissionDenied()
         serializer = self.serializer_class(
