@@ -24,7 +24,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         request = self.context.get('request')
 
-        if request and not request.user.is_authenticated:
+        if request:
             try:
                 privacy_settings = (
                     ProfilePrivacySettings.objects
@@ -39,7 +39,9 @@ class ProfileSerializer(serializers.ModelSerializer):
 
                 access_level = getattr(privacy_settings, field_name, 'all')
 
-                if access_level != 'all':
+                if access_level != 'all' and not request.user.is_authenticated:
+                    representation[field_name] = '*****'
+                elif access_level == 'nobody' and request.user.is_authenticated:
                     representation[field_name] = '*****'
 
             return representation
