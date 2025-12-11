@@ -23,10 +23,34 @@ class ProfilePrivacySettings(models.Model):
     first_name = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
+    middle_name = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
     last_name = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
     profession = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    city = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    country = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    relocation = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    work_format = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    edu_level = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    institution_name = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    graduation_year = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
     short_desc = models.CharField(
