@@ -44,7 +44,13 @@ class ProfilePrivacySettings(models.Model):
     work_format = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
+    work_formats = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
     edu_level = models.CharField(
+        choices=PRIVACIES, max_length=10, default='all'
+    )
+    edu_levels = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
     institution_name = models.CharField(

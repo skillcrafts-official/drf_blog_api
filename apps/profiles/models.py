@@ -32,6 +32,33 @@ def user_wallpaper_path(instance, filename):
     return f"wallpapers/user_{instance.user.id}/{filename}"
 
 
+class WorkFormat(models.Model):
+    """
+    Модель для хранения форматов работы
+    """
+    office = models.BooleanField(default=False, blank=True)
+    hybrid = models.BooleanField(default=False, blank=True)
+    remote = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        verbose_name = 'Форматы работы'
+        verbose_name_plural = 'Форматы работы'
+
+
+class RussianEduLevels(models.Model):
+    """
+    Модель для хранения уровней образования в России
+    """
+    first_middle = models.BooleanField(default=False, blank=True)
+    primary_voc_edu = models.BooleanField(default=False, blank=True)
+    secondary_voc_edu = models.BooleanField(default=False, blank=True)
+    higher_voc_edu = models.BooleanField(default=False, blank=True)
+
+    class Meta:
+        verbose_name = 'Уровни государственного образования'
+        verbose_name_plural = 'Уровни государственного образования'
+
+
 class Profile(models.Model):
     """
     Модель для профиля пользователя
@@ -54,12 +81,18 @@ class Profile(models.Model):
         choices=WORK_FORMATS,
         default='any'
     )
+    work_formats = models.ManyToManyField(
+        WorkFormat, related_name='profiles', blank=True
+    )
 
     # Образование
     edu_level = models.CharField(
         max_length=30,
         choices=EDU_LEVELS,
         default='not'
+    )
+    edu_levels = models.ManyToManyField(
+        RussianEduLevels, related_name='profiles', blank=True
     )
     institution_name = models.CharField(max_length=200, default='', blank=True)
     graduation_year = models.SmallIntegerField(null=True, blank=True)
