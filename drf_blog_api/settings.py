@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'apps.accounts', 'apps.profiles', 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
+    'apps.resume',
     'django_cleanup.apps.CleanupConfig',
 ]
 
@@ -233,11 +234,11 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
-    "VERSION": "2025.12.3",  # версия проекта
+    "VERSION": "2025.12.4",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
     'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
-    # DESCRIPTION (строка): Краткое описание API.
+    'DESCRIPTION': 'Добавлены ендпоинты для работы с резюме',
     # VERSION (строка): Версия API.
     # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.

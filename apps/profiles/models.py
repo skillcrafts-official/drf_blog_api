@@ -1,8 +1,25 @@
+from datetime import date
 from django.db import models
 
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.accounts.models import User
+
+
+WORK_FORMATS = [
+    ('office', 'офис'),
+    ('hybrid', 'гибрид'),
+    ('remote', 'удаленно'),
+    ('any', 'любой')
+]
+
+EDU_LEVELS = [
+    ('not', 'не указано'),
+    ('first_middle', '11 классов'),
+    ('primary_voc_edu', 'Начальное профессиональное образование'),
+    ('secondary_voc_edu', 'Среднее профессиональное образование'),
+    ('higher_voc_edu', 'Высшее профессиональное образование')
+]
 
 
 def user_avatar_path(instance, filename):
@@ -19,9 +36,34 @@ class Profile(models.Model):
     """
     Модель для профиля пользователя
     """
+    # Персональные данные
     first_name = models.CharField(max_length=20, default='', blank=True)
+    middle_name = models.CharField(max_length=50, default='', blank=True)
     last_name = models.CharField(max_length=20, default='', blank=True)
-    profession = models.CharField(max_length=100, default='', blank=True)
+    profession = models.CharField(
+        verbose_name='Senior Product Manager | Growth & Monetization',
+        max_length=100, default='', blank=True
+    )
+
+    # Локация
+    city = models.CharField(max_length=100, default='', blank=True)
+    country = models.CharField(max_length=100, default='', blank=True)
+    relocation = models.CharField(max_length=200, default='', blank=True)
+    work_format = models.CharField(
+        max_length=20,
+        choices=WORK_FORMATS,
+        default='any'
+    )
+
+    # Образование
+    edu_level = models.CharField(
+        max_length=30,
+        choices=EDU_LEVELS,
+        default='not'
+    )
+    institution_name = models.CharField(max_length=200, default='', blank=True)
+    graduation_year = models.SmallIntegerField(null=True, blank=True)
+
     short_desc = models.CharField(max_length=1000, default='', blank=True)
     full_desc = models.TextField(default='', blank=True)
 
@@ -75,3 +117,27 @@ class Profile(models.Model):
         # user = User.objects.get(pk=self.user)
         self.user.is_active = False
         self.user.save()
+
+    @property
+    def full_name(self):
+        return str(self)
+
+    @property
+    def email(self):
+        return self.user.primary_email
+
+    @property
+    def total_experience_years(self):
+        # Расчет общего опыта работы
+        experiences = self.experiences.all()
+        if not experiences:
+            return 0
+
+        total_days = 0
+        for exp in experiences:
+            if exp.end_date:
+                total_days += (exp.end_date - exp.start_date).days
+            else:
+                total_days += (date.today() - exp.start_date).days
+
+        return round(total_days / 365.25, 1)

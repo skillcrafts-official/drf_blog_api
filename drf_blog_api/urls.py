@@ -35,6 +35,7 @@ urlpatterns = [
     path('profiles/', include('apps.profiles.urls')),
     path('posts/', include('apps.posts.urls')),
     path('privacy-settings/', include('apps.privacy_settings.urls')),
+    path('resume/', include('apps.resume.urls'))
 ]
 
 if settings.DEBUG:
