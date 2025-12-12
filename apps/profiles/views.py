@@ -7,16 +7,18 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
-from apps.profiles.models import Profile
-from apps.profiles.serializers import ProfileSerializer
+from apps.profiles.models import Profile, WorkFormat, RussianEduLevel
+from apps.profiles.serializers import (
+    ProfileSerializer, WorkFormatSerializer, RussianEduLevelSerializer
+)
 from apps.privacy_settings.models import ProfilePrivacySettings
 
 
-class ProfilesView(viewsets.ModelViewSet):
-    """Для выдачи списка профилей"""
-    queryset = Profile.objects.filter(user__is_active=True)
-    serializer_class = ProfileSerializer
-    lookup_field = 'pk'
+# class ProfilesView(viewsets.ModelViewSet):
+#     """Для выдачи списка профилей"""
+#     queryset = Profile.objects.filter(user__is_active=True)
+#     serializer_class = ProfileSerializer
+#     lookup_field = 'pk'
 
 
 class UserProfileView(APIView):
@@ -76,3 +78,6 @@ class UpdateUserProfileView(APIView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         response['X-Message'] = 'User has been deleted!'
         return response
+
+
+

@@ -32,33 +32,6 @@ def user_wallpaper_path(instance, filename):
     return f"wallpapers/user_{instance.user.id}/{filename}"
 
 
-class WorkFormat(models.Model):
-    """
-    Модель для хранения форматов работы
-    """
-    office = models.BooleanField(default=False, blank=True)
-    hybrid = models.BooleanField(default=False, blank=True)
-    remote = models.BooleanField(default=False, blank=True)
-
-    class Meta:
-        verbose_name = 'Форматы работы'
-        verbose_name_plural = 'Форматы работы'
-
-
-class RussianEduLevels(models.Model):
-    """
-    Модель для хранения уровней образования в России
-    """
-    first_middle = models.BooleanField(default=False, blank=True)
-    primary_voc_edu = models.BooleanField(default=False, blank=True)
-    secondary_voc_edu = models.BooleanField(default=False, blank=True)
-    higher_voc_edu = models.BooleanField(default=False, blank=True)
-
-    class Meta:
-        verbose_name = 'Уровни государственного образования'
-        verbose_name_plural = 'Уровни государственного образования'
-
-
 class Profile(models.Model):
     """
     Модель для профиля пользователя
@@ -76,24 +49,18 @@ class Profile(models.Model):
     city = models.CharField(max_length=100, default='', blank=True)
     country = models.CharField(max_length=100, default='', blank=True)
     relocation = models.CharField(max_length=200, default='', blank=True)
-    work_format = models.CharField(
-        max_length=20,
-        choices=WORK_FORMATS,
-        default='any'
-    )
-    work_formats = models.ManyToManyField(
-        WorkFormat, related_name='profiles', blank=True
-    )
+    # work_formats = models.OneToOneField(
+    #     WorkFormat,
+    #     on_delete=models.CASCADE,
+    #     related_name='profile'
+    # )
 
-    # Образование
-    edu_level = models.CharField(
-        max_length=30,
-        choices=EDU_LEVELS,
-        default='not'
-    )
-    edu_levels = models.ManyToManyField(
-        RussianEduLevels, related_name='profiles', blank=True
-    )
+    # # Образование
+    # edu_levels = models.OneToOneField(
+    #     RussianEduLevels,
+    #     on_delete=models.CASCADE,
+    #     related_name='profile'
+    # )
     institution_name = models.CharField(max_length=200, default='', blank=True)
     graduation_year = models.SmallIntegerField(null=True, blank=True)
 
@@ -174,3 +141,42 @@ class Profile(models.Model):
                 total_days += (date.today() - exp.start_date).days
 
         return round(total_days / 365.25, 1)
+
+
+class WorkFormat(models.Model):
+    """
+    Модель для хранения форматов работы
+    """
+    office = models.BooleanField(default=False, blank=True)
+    hybrid = models.BooleanField(default=False, blank=True)
+    remote = models.BooleanField(default=False, blank=True)
+
+    profile = models.OneToOneField(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='work_formats'
+    )
+
+    class Meta:
+        verbose_name = 'Форматы работы'
+        verbose_name_plural = 'Форматы работы'
+
+
+class RussianEduLevel(models.Model):
+    """
+    Модель для хранения уровней образования в России
+    """
+    first_middle = models.BooleanField(default=False, blank=True)
+    primary_voc_edu = models.BooleanField(default=False, blank=True)
+    secondary_voc_edu = models.BooleanField(default=False, blank=True)
+    higher_voc_edu = models.BooleanField(default=False, blank=True)
+
+    profile = models.OneToOneField(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='edu_level'
+    )
+
+    class Meta:
+        verbose_name = 'Уровни государственного образования'
+        verbose_name_plural = 'Уровни государственного образования'

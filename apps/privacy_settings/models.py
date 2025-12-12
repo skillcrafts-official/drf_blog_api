@@ -41,13 +41,7 @@ class ProfilePrivacySettings(models.Model):
     relocation = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
-    work_format = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
-    )
     work_formats = models.CharField(
-        choices=PRIVACIES, max_length=10, default='all'
-    )
-    edu_level = models.CharField(
         choices=PRIVACIES, max_length=10, default='all'
     )
     edu_levels = models.CharField(

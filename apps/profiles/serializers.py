@@ -1,9 +1,42 @@
 """Сериализаторы для профилей пользователей"""
 # pylint: disable=too-few-public-methods,no-member
 from rest_framework import serializers
-from apps.profiles.models import Profile
+from apps.profiles.models import Profile, WorkFormat, RussianEduLevel
 
 from apps.privacy_settings.models import ProfilePrivacySettings
+
+
+class WorkFormatSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для выдачи и установки предпочитаемых
+    форматов работы (офис, удаленно, гибрид)
+    """
+
+    class Meta:
+        model = WorkFormat
+        # fields = '__all__'
+        exclude = ['profile']
+
+
+class RussianEduLevelSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для выдачи и установки предпочитаемых
+    форматов работы (офис, удаленно, гибрид)
+    """
+
+    class Meta:
+        model = RussianEduLevel
+        # fields = '__all__'
+        exclude = ['profile']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        new_representation = {}
+        # new_representation.update({'profile': representation.get('profile')})
+        for field, value in representation.items():
+            if field not in ('id', 'profile') and value:
+                new_representation.update({field: value})
+        return new_representation
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -11,6 +44,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     Сериализатор для выдачи профиля пользователя
     по запросу авторизованного пользователя
     """
+    work_formats = WorkFormatSerializer(partial=True, read_only=True)
+    edu_level = RussianEduLevelSerializer(read_only=True)
+    # serializers.SerializerMethodField()
+
     class Meta:
         model = Profile
         fields = '__all__'

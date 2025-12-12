@@ -10,7 +10,7 @@ from apps.resume.models import (
 
 
 class BaseModelSerializer(serializers.ModelSerializer):
-    """Базовый сериализатор, который скрывает поле profile"""
+    """Базовый сериализатор"""
 
     class Meta:
         abstract = True
@@ -35,18 +35,26 @@ class BaseModelSerializer(serializers.ModelSerializer):
         return representation
 
 
-class WorkResultSerializer(BaseModelSerializer):
+class WorkResultSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WorkResult
+        # fields = '__all__'
+        exclude = ['work_experience']
+
+
+class SummaryWorkResultSerializer(BaseModelSerializer):
 
     class Meta:
         model = WorkResult
         fields = '__all__'
 
 
-class UpdateWorkResultSerializer(BaseModelSerializer):
+# class UpdateWorkResultSerializer(BaseModelSerializer):
 
-    class Meta:
-        model = WorkResult
-        fields = ['result']
+#     class Meta:
+#         model = WorkResult
+#         fields = ['result']
 
 
 class PrivacyWorkResultSerializer(BaseModelSerializer):
@@ -56,8 +64,8 @@ class PrivacyWorkResultSerializer(BaseModelSerializer):
         fields = ['privacy']
 
 
-class WorkExperienceSerializer(BaseModelSerializer):
-    results = WorkResultSerializer(many=True, read_only=True)
+class SummaryWorkExperienceSerializer(BaseModelSerializer):
+    results = SummaryWorkResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkExperience
@@ -65,11 +73,11 @@ class WorkExperienceSerializer(BaseModelSerializer):
         read_only_fields = ('profile', )
 
 
-class UpdateWorkExperienceSerializer(BaseModelSerializer):
+class WorkExperienceSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkExperience
-        exclude = ('profile', )
+        fields = '__all__'
 
 
 class PrivacyWorkExperienceSerializer(BaseModelSerializer):
@@ -93,11 +101,18 @@ class PrivacySkillSerializer(BaseModelSerializer):
         fields = ['privacy']
 
 
-class SkillClusterSerializer(BaseModelSerializer):
+class SkillClusterSerializer(serializers.ModelSerializer):
     skills = SkillSerializer(
         # many=True, read_only=True, source='profile.skills'
         many=True, read_only=True
     )
+
+    class Meta:
+        model = SkillCluster
+        fields = '__all__'
+
+
+class UpdateSkillClusterSerializer(BaseModelSerializer):
 
     class Meta:
         model = SkillCluster
@@ -137,7 +152,7 @@ class UpdateLanguageSerializer(BaseModelSerializer):
 
     class Meta:
         model = Language
-        fields = ['level']
+        fields = ['level', 'profile']
 
 
 class PrivacyLanguageSerializer(BaseModelSerializer):
@@ -148,7 +163,7 @@ class PrivacyLanguageSerializer(BaseModelSerializer):
 
 
 class SummarySerializer(BaseModelSerializer):
-    experiences = WorkExperienceSerializer(
+    experiences = SummaryWorkExperienceSerializer(
         many=True, read_only=True, source='profile.experiences'
     )
     skills = SkillSerializer(
