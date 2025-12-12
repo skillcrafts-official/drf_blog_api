@@ -3,9 +3,9 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
-from apps.profiles.models import Profile, WorkFormat, RussianEduLevel
+from apps.profiles.models import Profile, WorkFormat
 from apps.profiles.serializers import (
-    WorkFormatSerializer, RussianEduLevelSerializer, ProfileSerializer
+    WorkFormatSerializer, ProfileSerializer
 )
 from apps.profiles.filters import ProfileFilters
 
@@ -68,12 +68,4 @@ class WorkFormatView(BaseModelViewSet):
     """Для выдачи предпочитаемых форматов работы"""
     queryset = WorkFormat.objects.all()
     serializer_class = WorkFormatSerializer
-    lookup_field = 'profile'
-
-
-class RussianEduLevelView(BaseModelViewSet):
-    """Для выдачи списка профилей"""
-    queryset = RussianEduLevel.objects.all()
-    serializer_class = RussianEduLevelSerializer
-    # filterset_class = RussianEduLevelFilters
     lookup_field = 'profile'

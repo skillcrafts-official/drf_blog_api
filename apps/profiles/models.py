@@ -14,7 +14,7 @@ WORK_FORMATS = [
 ]
 
 EDU_LEVELS = [
-    ('not', 'не указано'),
+    ('nothing', 'не указано'),
     ('first_middle', '11 классов'),
     ('primary_voc_edu', 'Начальное профессиональное образование'),
     ('secondary_voc_edu', 'Среднее профессиональное образование'),
@@ -55,12 +55,10 @@ class Profile(models.Model):
     #     related_name='profile'
     # )
 
-    # # Образование
-    # edu_levels = models.OneToOneField(
-    #     RussianEduLevels,
-    #     on_delete=models.CASCADE,
-    #     related_name='profile'
-    # )
+    # Образование
+    edu_level = models.CharField(
+        max_length=30, choices=EDU_LEVELS, default='nothing', blank=True
+    )
     institution_name = models.CharField(max_length=200, default='', blank=True)
     graduation_year = models.SmallIntegerField(null=True, blank=True)
 
@@ -162,22 +160,25 @@ class WorkFormat(models.Model):
         verbose_name_plural = 'Форматы работы'
 
 
-class RussianEduLevel(models.Model):
-    """
-    Модель для хранения уровней образования в России
-    """
-    nothing = models.BooleanField(default=True, blank=True)
-    first_middle = models.BooleanField(default=False, blank=True)
-    primary_voc_edu = models.BooleanField(default=False, blank=True)
-    secondary_voc_edu = models.BooleanField(default=False, blank=True)
-    higher_voc_edu = models.BooleanField(default=False, blank=True)
+# class RussianEduLevel(models.Model):
+#     """
+#     Модель для хранения уровней образования в России
+#     """
+#     edu_level = models.CharField(
+#         max_length=30, choices=EDU_LEVELS, default='nothing', blank=True
+#     )
+#     # nothing = models.BooleanField(default=True, blank=True)
+#     # first_middle = models.BooleanField(default=False, blank=True)
+#     # primary_voc_edu = models.BooleanField(default=False, blank=True)
+#     # secondary_voc_edu = models.BooleanField(default=False, blank=True)
+#     # higher_voc_edu = models.BooleanField(default=False, blank=True)
 
-    profile = models.OneToOneField(
-        Profile,
-        on_delete=models.CASCADE,
-        related_name='edu_level'
-    )
+#     profile = models.OneToOneField(
+#         Profile,
+#         on_delete=models.CASCADE,
+#         related_name='edu_level'
+#     )
 
-    class Meta:
-        verbose_name = 'Уровни государственного образования'
-        verbose_name_plural = 'Уровни государственного образования'
+#     class Meta:
+#         verbose_name = 'Уровни государственного образования'
+#         verbose_name_plural = 'Уровни государственного образования'
