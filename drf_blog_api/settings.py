@@ -23,8 +23,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 't')
+
 # Загрузка .env
-load_dotenv()
+if DEBUG:
+    load_dotenv('.env')
+else:
+    load_dotenv('.env.development')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
@@ -35,9 +41,6 @@ if not SECRET_KEY:
     from django.core.management.utils import get_random_secret_key
     SECRET_KEY = get_random_secret_key()
     print(f"⚠️  ВНИМАНИЕ: Используется сгенерированный SECRET_KEY: {SECRET_KEY[:20]}...")
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 't')
 
 if not DEBUG:
     # ПРОДАКШЕН - всегда HTTPS
@@ -234,7 +237,7 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Blog API",  # название проекта
-    "VERSION": "2025.12.4",  # версия проекта
+    "VERSION": "mvp.2025.12.4",  # версия проекта
     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
     'SORT_OPERATION_PARAMETERS': False,
     # TITLE (строка): Заголовок API в документации.
