@@ -166,7 +166,7 @@ class RussianEduLevel(models.Model):
     """
     Модель для хранения уровней образования в России
     """
-    nothing = models.BooleanField(default=False, blank=True)
+    nothing = models.BooleanField(default=True, blank=True)
     first_middle = models.BooleanField(default=False, blank=True)
     primary_voc_edu = models.BooleanField(default=False, blank=True)
     secondary_voc_edu = models.BooleanField(default=False, blank=True)
