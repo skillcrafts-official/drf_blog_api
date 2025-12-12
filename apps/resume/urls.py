@@ -28,6 +28,11 @@ urlpatterns = [
         name='add_user_experiences'
     ),
     path(
+        'work-experiences/<int:experience_id>/',
+        WorkExperienceViewSet.as_view({'patch': 'partial_update'}),
+        name='udpate_user_experiences'
+    ),
+    path(
         'work-experiences/<int:pk>/<int:user_id>/privacies/',
         PrivacyWorkExperienceViewSet.as_view({
             'get': 'retrieve', 'put': 'update'

@@ -96,6 +96,7 @@ class WorkExperienceViewSet(BaseModelViewSet):
     queryset = WorkExperience.objects.all()
     serializer_class = WorkExperienceSerializer
     filterset_class = WorkExperienceFilters
+    lookup_field = 'experience_id'
 
 
 class PrivacyWorkExperienceViewSet(BaseModelViewSet):
