@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import status  # type: ignore
 from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
 
 from drf_spectacular.utils import (
     inline_serializer, extend_schema, extend_schema_view,
@@ -15,17 +16,17 @@ from apps.profiles.serializers import (
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
 
-class FixUserProfileView(OpenApiViewExtension):
+class FixProfilesViewView(OpenApiViewExtension):
     """
-    Фиксируется документация для UserProfileView
+    Фиксируется документация для ProfilesView
     """
-    target_class = 'apps.profiles.views.UserProfileView'
+    target_class = 'apps.profiles.viewsets.ProfilesView'
 
-    def view_replacement(self) -> type[APIView]:
+    def view_replacement(self) -> type[ModelViewSet]:
 
         @extend_schema_view(
-            get=extend_schema(
-                summary="Получить профиль пользователя",
+            list=extend_schema(
+                summary="Получить профили пользователя",
                 description=(
                     "**Требуется аутентификация:** Да  \n"
                     "**Права:** Для всех авторизованных пользователей"
@@ -84,6 +85,78 @@ class FixUpdateUserProfileView(OpenApiViewExtension):
                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
                 }
             ),
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixRussianEduLevelView(OpenApiViewExtension):
+    """
+    Расширяется документация для RussianEduLevelView
+    """
+    target_class = 'apps.profiles.viewsets.RussianEduLevelView'
+
+    def view_replacement(self) -> type[ModelViewSet]:
+        @extend_schema_view(
+            retrieve=extend_schema(
+                summary="Получить уровень образования",
+                description=(
+                    "Получение уровня образования пользователя.  \n  \n"
+                    "Этот ендпоинт возращает информацию только об "
+                    "уровне образования для компонентов фронтенда "
+                    "типа MultiCheckBox.  \n"
+                    "По умолчанию информация доступна **всем авторизованным** "
+                    "пользователям и гостям. Видимость этого компонента "
+                    "профиля и резюме можно настраивать отдельно."
+                )
+            ),
+            partial_update=extend_schema(
+                summary="Изменить уровень образования",
+                description=(
+                    "Изменение уровня образования  \n  \n"
+                    "Изменение доступно только владельцу аккаунта и "
+                    "только из специального компонента фронтенда "
+                    "типа MultiCheckBox"
+                )
+            )
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
+
+
+class FixWorkFormatView(OpenApiViewExtension):
+    """
+    Расширяется документация для WorkFormatView
+    """
+    target_class = 'apps.profiles.viewsets.WorkFormatView'
+
+    def view_replacement(self) -> type[ModelViewSet]:
+        @extend_schema_view(
+            retrieve=extend_schema(
+                summary="Получить список форматов работы",
+                description=(
+                    "Получение списка препочитаемых форматов работы.  \n  \n"
+                    "Этот ендпоинт возращает информацию только о "
+                    "предпочтениях для компонентов фронтенда "
+                    "типа SimpleCheckBox.  \n"
+                    "По умолчанию информация доступна **всем авторизованным** "
+                    "пользователям и гостям. Видимость этого компонента "
+                    "профиля и резюме можно настраивать отдельно."
+                )
+            ),
+            partial_update=extend_schema(
+                summary="Изменить список форматов работы",
+                description=(
+                    "Изменение списка форматов работы  \n  \n"
+                    "Изменение доступно только владельцу аккаунта и "
+                    "только из специального компонента фронтенда "
+                    "типа SimpleCheckBox"
+                )
+            )
         )
         class Fixed(self.target_class):  # type: ignore
             pass
