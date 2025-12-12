@@ -28,9 +28,9 @@ DEBUG = os.getenv('DEBUG', 'False').lower() in ('true', '1', 'yes', 't')
 
 # Загрузка .env
 if DEBUG:
-    load_dotenv('.env')
-else:
     load_dotenv('.env.development')
+else:
+    load_dotenv('.env')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
