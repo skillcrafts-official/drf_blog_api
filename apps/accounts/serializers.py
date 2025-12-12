@@ -39,8 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
             is_active=True
         )
         # автоматически добавляется пустой профиль
-        profile = Profile.objects.create(user=user)
-        permissions = ProfilePrivacySettings.objects.create(profile=profile)
+        # permissions = ProfilePrivacySettings.objects.create(profile=profile)
         return user
     
     def create_new_email(self, validated_data):

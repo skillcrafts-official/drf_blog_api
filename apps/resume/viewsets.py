@@ -7,11 +7,9 @@ from apps.resume.serializers import (
     SummarySerializer, PrivacySummarySerializer,
     LanguageSerializer, UpdateLanguageSerializer, PrivacyLanguageSerializer,
     SkillSerializer, PrivacySkillSerializer,
-    WorkExperienceSerializer, UpdateWorkExperienceSerializer,
-    PrivacyWorkExperienceSerializer,
-    WorkResultSerializer, UpdateWorkResultSerializer,
-    PrivacyWorkResultSerializer,
-    SkillClusterSerializer,
+    WorkExperienceSerializer, PrivacyWorkExperienceSerializer,
+    WorkResultSerializer, PrivacyWorkResultSerializer,
+    SkillClusterSerializer, UpdateSkillClusterSerializer,
     SertificateSerializer, UpdateSertificateSerializer,
     PrivacySertificateSerializer
 )
@@ -37,19 +35,31 @@ class BaseModelViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs) -> Response:
         user = request.user
-        if user.pk != kwargs['user_id']:
+        user_id = kwargs.get('user_id', None)
+        profile_id = kwargs.get('profile', None)
+        if profile_id is None:
+            profile_id = request.data.get('profile', None)
+        if user.pk != (user_id if user_id else profile_id):
             raise PermissionDenied()
         return super().update(request, *args, **kwargs)
 
     def partial_update(self, request, *args, **kwargs) -> Response:
         user = request.user
-        if user.pk != kwargs['user_id']:
-            raise PermissionDenied()
+        user_id = kwargs.get('user_id', None)
+        profile_id = kwargs.get('profile', None)
+        if profile_id is None:
+            profile_id = request.data.get('profile', None)
+        if user.pk != (user_id if user_id else profile_id):
+            raise PermissionDenied(f'{user.pk = } {user_id = } {profile_id = }')
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs) -> Response:
         user = request.user
-        if user.pk != kwargs['user_id']:
+        user_id = kwargs.get('user_id', None)
+        profile_id = kwargs.get('profile', None)
+        if profile_id is None:
+            profile_id = request.data.get('profile', None)
+        if user.pk != (user_id if user_id else profile_id):
             raise PermissionDenied()
         return super().update(request, *args, **kwargs)
 
@@ -88,12 +98,6 @@ class WorkExperienceViewSet(BaseModelViewSet):
     filterset_class = WorkExperienceFilters
 
 
-class UpdateWorkExperienceViewSet(BaseModelViewSet):
-    queryset = WorkExperience.objects.all()
-    serializer_class = UpdateWorkExperienceSerializer
-    lookup_field = 'pk'
-
-
 class PrivacyWorkExperienceViewSet(BaseModelViewSet):
     queryset = WorkExperience.objects.all()
     serializer_class = PrivacyWorkExperienceSerializer
@@ -104,12 +108,13 @@ class WorkResultViewSet(BaseModelViewSet):
     queryset = WorkResult.objects.all()
     serializer_class = WorkResultSerializer
     filterset_class = WorkResultFilters
+    lookup_field = 'experience_id'
 
 
-class UpdateWorkResultViewSet(BaseModelViewSet):
-    queryset = WorkResult.objects.all()
-    serializer_class = UpdateWorkResultSerializer
-    lookup_field = 'pk'
+# class UpdateWorkResultViewSet(BaseModelViewSet):
+#     queryset = WorkResult.objects.all()
+#     serializer_class = UpdateWorkResultSerializer
+#     lookup_field = 'pk'
 
 
 class PrivacyWorkResultViewSet(BaseModelViewSet):
@@ -123,6 +128,12 @@ class SkillClusterViewSet(BaseModelViewSet):
     serializer_class = SkillClusterSerializer
     filterset_class = SkillClusterFilters
     # lookup_field = 'skill-cluster-id'
+
+
+class UpdateSkillClusterViewSet(BaseModelViewSet):
+    queryset = SkillCluster.objects.all()
+    serializer_class = UpdateSkillClusterSerializer
+    lookup_field = 'pk'
 
 
 class SkillViewSet(BaseModelViewSet):

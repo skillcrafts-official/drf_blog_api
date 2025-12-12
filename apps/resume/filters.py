@@ -61,8 +61,8 @@ class WorkExperienceFilters(django_filters.FilterSet):
 
 class WorkResultFilters(django_filters.FilterSet):
     result_id = django_filters.NumberFilter(field_name='id')
-    experience_id = django_filters.NumberFilter(field_name='work_experience_id')
+    # experience_id = django_filters.NumberFilter(field_name='work_experience_id')
 
     class Meta:
         model = WorkResult
-        fields = ['result_id', 'experience_id']
+        fields = ['result_id']

@@ -250,6 +250,7 @@ class Skill(models.Model):
     cluster = models.ForeignKey(
         SkillCluster,
         on_delete=models.CASCADE,
+        default=1,
         related_name='skills'
     )
     skill_name = models.CharField(max_length=20, unique=True)

@@ -4,10 +4,10 @@ from django.urls import path
 from apps.resume.viewsets import (
     SkillViewSet, PrivacySkillViewSet, SummaryViewSet, PrivacySummaryViewSet,
     LanguageViewSet, UpdateLanguageViewSet, PrivacyLanguageViewSet,
-    WorkExperienceViewSet, UpdateWorkExperienceViewSet,
+    WorkExperienceViewSet,
     PrivacyWorkExperienceViewSet,
-    WorkResultViewSet, UpdateWorkResultViewSet, PrivacyWorkResultViewSet,
-    SkillClusterViewSet,
+    WorkResultViewSet, PrivacyWorkResultViewSet,
+    SkillClusterViewSet, UpdateSkillClusterViewSet,
     SertificateViewSet, UpdateSertificateViewSet, PrivacySertificateViewSet
 )
 
@@ -28,13 +28,6 @@ urlpatterns = [
         name='add_user_experiences'
     ),
     path(
-        'work-experiences/<int:pk>/',
-        UpdateWorkExperienceViewSet.as_view({
-            'patch': 'partial_update', 'delete': 'destroy'
-        }),
-        name='update_user_experiences'
-    ),
-    path(
         'work-experiences/<int:pk>/<int:user_id>/privacies/',
         PrivacyWorkExperienceViewSet.as_view({
             'get': 'retrieve', 'put': 'update'
@@ -42,16 +35,9 @@ urlpatterns = [
         name='update_work_experience_privacy_setting'
     ),
     path(
-        'work-experiences/results/',
+        'work-experiences/<int:experience_id>/results/',
         WorkResultViewSet.as_view({'get': 'list', 'post': 'create'}),
         name='get_user_experience_results'
-    ),
-    path(
-        'work-experiences/results/<int:pk>/',
-        UpdateWorkResultViewSet.as_view({
-            'patch': 'partial_update', 'delete': 'destroy'
-        }),
-        name='update_user_experience_results'
     ),
     path(
         'work-experiences/results/<int:pk>/<int:user_id>/privacies/',
@@ -65,6 +51,11 @@ urlpatterns = [
         SkillClusterViewSet.as_view({'get': 'list', 'post': 'create'}),
         name='get_skill_clusters'
     ),
+    # path(
+    #     'skill-clusters/update/',
+    #     UpdateSkillClusterViewSet.as_view({'post': 'create'}),
+    #     name='update_skill_clusters'
+    # ),
     path(
         'skills/',
         SkillViewSet.as_view({'get': 'list', 'post': 'create'}),
