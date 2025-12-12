@@ -16,17 +16,17 @@ from apps.profiles.serializers import (
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
 
-class FixProfilesViewView(OpenApiViewExtension):
+class FixUserProfileViewView(OpenApiViewExtension):
     """
-    Фиксируется документация для ProfilesView
+    Фиксируется документация для UserProfileView
     """
-    target_class = 'apps.profiles.viewsets.ProfilesView'
+    target_class = 'apps.profiles.views.UserProfileView'
 
-    def view_replacement(self) -> type[ModelViewSet]:
+    def view_replacement(self) -> type[APIView]:
 
         @extend_schema_view(
-            list=extend_schema(
-                summary="Получить профили пользователя",
+            get=extend_schema(
+                summary="Получить профиль пользователя",
                 description=(
                     "**Требуется аутентификация:** Да  \n"
                     "**Права:** Для всех авторизованных пользователей"
@@ -37,22 +37,6 @@ class FixProfilesViewView(OpenApiViewExtension):
                     status.HTTP_403_FORBIDDEN: PERMISSION_DENIED
                 },
             ),
-        )
-        class Fixed(self.target_class):  # type: ignore
-            pass
-
-        return Fixed
-
-
-class FixUpdateUserProfileView(OpenApiViewExtension):
-    """
-    Фиксируется документация для UpdateUserProfileView
-    """
-    target_class = 'apps.profiles.views.UpdateUserProfileView'
-
-    def view_replacement(self) -> type[APIView]:
-
-        @extend_schema_view(
             post=extend_schema(
                 summary="Обновить свой профиль",
                 description=(

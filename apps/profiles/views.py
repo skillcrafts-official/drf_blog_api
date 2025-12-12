@@ -1,29 +1,21 @@
 # pylint: disable=no-member,unused-argument
 from django.db.models.query import QuerySet
 
-from rest_framework import status, viewsets
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, BasePermission
 
-from apps.profiles.models import Profile, WorkFormat, RussianEduLevel
-from apps.profiles.serializers import (
-    ProfileSerializer, WorkFormatSerializer, RussianEduLevelSerializer
-)
+from apps.profiles.models import Profile
+from apps.profiles.serializers import ProfileSerializer
 from apps.privacy_settings.models import ProfilePrivacySettings
 
 
-# class ProfilesView(viewsets.ModelViewSet):
-#     """Для выдачи списка профилей"""
-#     queryset = Profile.objects.filter(user__is_active=True)
-#     serializer_class = ProfileSerializer
-#     lookup_field = 'pk'
-
-
 class UserProfileView(APIView):
-    """Выдача профиля"""
+    """Ендпоинты для обновления профиля"""
     serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated, BasePermission]
 
     def get(self, request, *args, **kwargs):
         """Получение профиля"""
@@ -36,12 +28,6 @@ class UserProfileView(APIView):
             profile, context={'request': request}
         )
         return Response(data=serializer.data, status=200)
-
-
-class UpdateUserProfileView(APIView):
-    """Ендпоинты для обновления профиля"""
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated, BasePermission]
 
     def post(self, request, *args, **kwargs):
         """Обновление своего профиля"""

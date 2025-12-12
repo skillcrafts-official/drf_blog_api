@@ -56,11 +56,11 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
 
-class ProfilesView(viewsets.ModelViewSet):
-    """Для выдачи списка профилей"""
-    queryset = Profile.objects.filter(user__is_active=True)
-    serializer_class = ProfileSerializer
-    filterset_class = ProfileFilters
+# class ProfilesView(viewsets.ModelViewSet):
+#     """Для выдачи списка профилей"""
+#     queryset = Profile.objects.filter(user__is_active=True)
+#     serializer_class = ProfileSerializer
+#     filterset_class = ProfileFilters
     # lookup_field = 'pk'
 
 
