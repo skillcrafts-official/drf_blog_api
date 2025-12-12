@@ -10,5 +10,7 @@ class ProfilesConfig(AppConfig):
         try:
             # pylint: disable=import-outside-toplevel,unused-import
             from apps.profiles import spectaculars  # noqa: F401
+            from apps.profiles import signals       # noqa: F401
+            from apps.profiles import handlers      # noqa: F401
         except ImportError:
             pass
