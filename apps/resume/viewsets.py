@@ -109,7 +109,7 @@ class WorkResultViewSet(BaseModelViewSet):
     queryset = WorkResult.objects.all()
     serializer_class = WorkResultSerializer
     filterset_class = WorkResultFilters
-    lookup_field = 'experience_id'
+    # lookup_field = 'pk'
 
 
 # class UpdateWorkResultViewSet(BaseModelViewSet):

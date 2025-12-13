@@ -39,8 +39,8 @@ class WorkResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkResult
-        # fields = '__all__'
-        exclude = ['work_experience']
+        fields = '__all__'
+        # exclude = ['work_experience_id']
 
 
 class SummaryWorkResultSerializer(BaseModelSerializer):

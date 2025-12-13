@@ -40,9 +40,14 @@ urlpatterns = [
         name='update_work_experience_privacy_setting'
     ),
     path(
-        'work-experiences/<int:experience_id>/results/',
+        'work-experiences/results/',
         WorkResultViewSet.as_view({'get': 'list', 'post': 'create'}),
         name='get_user_experience_results'
+    ),
+    path(
+        'work-experiences/results/<int:pk>/<int:user_id>/',
+        WorkResultViewSet.as_view({'patch': 'partial_update'}),
+        name='udpate_experience_results'
     ),
     path(
         'work-experiences/results/<int:pk>/<int:user_id>/privacies/',
