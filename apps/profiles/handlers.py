@@ -23,7 +23,7 @@ def create_user_profile_handler(user_instance):
             work_experience, _ = WorkExperience.objects.get_or_create(profile=profile)
             language, _ = Language.objects.get_or_create(
                 profile=profile,
-                name='Русский',
+                name='russian',
                 level='N'
             )
             return profile
