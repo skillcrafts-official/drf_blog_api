@@ -152,7 +152,7 @@ class UpdateLanguageSerializer(BaseModelSerializer):
 
     class Meta:
         model = Language
-        fields = ['level', 'profile']
+        fields = ['level']
 
 
 class PrivacyLanguageSerializer(BaseModelSerializer):

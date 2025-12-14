@@ -106,7 +106,7 @@ urlpatterns = [
         name='get_languages'
     ),
     path(
-        'languages/<int:pk>/',
+        'languages/<int:pk>/<int:user_id>/',
         UpdateLanguageViewSet.as_view({
             'patch': 'partial_update', 'delete': 'destroy'
         }),

@@ -64,7 +64,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
             profile_id = request.data.get('profile', None)
         if user.pk != (user_id if user_id else profile_id):
             raise PermissionDenied()
-        return super().update(request, *args, **kwargs)
+        return super().destroy(request, *args, **kwargs)
 
 
 class SummaryViewSet(BaseModelViewSet):
