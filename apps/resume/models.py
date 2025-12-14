@@ -1,6 +1,8 @@
 from django.db import models
+
 from apps.accounts.models import User
 from apps.profiles.models import Profile
+from apps.CONSTANTS import LANGUAGES
 
 
 WORK_FORMATS = [
@@ -386,18 +388,8 @@ class Sertificate(models.Model):
 #     def __str__(self):
 #         return str(self.edu_level)
 
-
-LANGUAGES = [
-    ('russian', 'Русский'),
-    ('english', 'Английский')
-]
-
-LANG_LEVELS = [
-    ('Native', 'Родной')
-]
-
-
 class Language(models.Model):
+    LANGUAGES = LANGUAGES
     LANGUAGE_LEVELS = [
         ('A1', 'Начальный (A1)'),
         ('A2', 'Элементарный (A2)'),
@@ -413,7 +405,7 @@ class Language(models.Model):
         on_delete=models.CASCADE,
         related_name='languages'
     )
-    name = models.CharField(max_length=50, null=True, blank=True)
+    name = models.CharField(max_length=50,  choices=LANGUAGES)
     level = models.CharField(max_length=2, choices=LANGUAGE_LEVELS)
     privacy = models.CharField(
         verbose_name='Настройка видимости владения языком',

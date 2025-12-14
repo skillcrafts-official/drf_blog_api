@@ -1,4 +1,7 @@
+from django.core.cache import cache
+
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -173,6 +176,36 @@ class LanguageViewSet(BaseModelViewSet):
     serializer_class = LanguageSerializer
     filterset_class = LanguageFilters
     # lookup_field = 'language-id'
+
+    @action(detail=False, methods=['get'])
+    def languages(self, request):
+        """
+        Кастомный ендпоинт выдаёт список языков
+        для компонентов выбора на клиенте
+        """
+        cache_key = 'lang_choices'
+        choices = cache.get(cache_key)
+
+        if not choices:
+            choices = dict(sorted(Language.LANGUAGES))
+            cache.set(cache_key, choices, timeout=3600)  # Кэш на 1 час
+
+        return Response(choices)
+
+    @action(detail=False, methods=['get'])
+    def levels(self, request):
+        """
+        Кастомный ендпоинт выдаёт список уровней владения
+        языками для компонентов выбора на клиенте
+        """
+        cache_key = 'level_choices'
+        choices = cache.get(cache_key)
+
+        if not choices:
+            choices = dict(sorted(Language.LANGUAGE_LEVELS))
+            cache.set(cache_key, choices, timeout=3600)  # Кэш на 1 час
+
+        return Response(choices)
 
 
 class UpdateLanguageViewSet(BaseModelViewSet):

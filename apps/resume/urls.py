@@ -1,16 +1,21 @@
 """The urls routing for app $PATH_TO_APP"""
 from django.urls import path
 
+from rest_framework import routers
+
 from apps.resume.viewsets import (
     SkillViewSet, PrivacySkillViewSet, SummaryViewSet, PrivacySummaryViewSet,
     LanguageViewSet, UpdateLanguageViewSet, PrivacyLanguageViewSet,
     WorkExperienceViewSet,
     PrivacyWorkExperienceViewSet,
     WorkResultViewSet, PrivacyWorkResultViewSet,
-    SkillClusterViewSet, UpdateSkillClusterViewSet,
+    SkillClusterViewSet,
     SertificateViewSet, UpdateSertificateViewSet, PrivacySertificateViewSet
 )
 
+
+router = routers.DefaultRouter()
+router.register(r'language_list', LanguageViewSet)
 
 urlpatterns = [
     path(
@@ -106,6 +111,16 @@ urlpatterns = [
             'patch': 'partial_update', 'delete': 'destroy'
         }),
         name='update_languages'
+    ),
+    path(
+        'languages/display/names/',
+        LanguageViewSet.as_view({'get': 'languages'}),
+        name='get_language_names'
+    ),
+    path(
+        'languages/display/levels/',
+        LanguageViewSet.as_view({'get': 'levels'}),
+        name='get_language_levels'
     ),
     path(
         'languages/<int:pk>/<int:user_id>/privacies/',
