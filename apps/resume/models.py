@@ -406,7 +406,9 @@ class Language(models.Model):
         related_name='languages'
     )
     name = models.CharField(max_length=50,  choices=LANGUAGES)
-    level = models.CharField(max_length=2, choices=LANGUAGE_LEVELS)
+    level = models.CharField(
+        max_length=2, choices=LANGUAGE_LEVELS, default='A1'
+    )
     privacy = models.CharField(
         verbose_name='Настройка видимости владения языком',
         max_length=10, choices=PRIVACIES, default='all', blank=True
