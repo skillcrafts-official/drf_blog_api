@@ -13,14 +13,6 @@ WORK_FORMATS = [
     ('any', 'любой')
 ]
 
-EDU_LEVELS = [
-    ('nothing', 'не указано'),
-    ('first_middle', '11 классов'),
-    ('primary_voc_edu', 'Начальное профессиональное образование'),
-    ('secondary_voc_edu', 'Среднее профессиональное образование'),
-    ('higher_voc_edu', 'Высшее профессиональное образование')
-]
-
 
 def user_avatar_path(instance, filename):
     """Персонализируется путь к аватару пользователя"""
@@ -36,6 +28,22 @@ class Profile(models.Model):
     """
     Модель для профиля пользователя
     """
+    EDUCATION_CHOICES = [
+        ('nothing', 'не указано'),
+        ('school_9', '9 классов'),
+        ('school_11', '11 классов'),
+        ('ptu', 'ПТУ / Профессиональное училище'),
+        ('technical_school', 'Техникум'),
+        ('college', 'Колледж'),
+        ('unfinished_higher', 'Неоконченное высшее'),
+        ('bachelor', 'Бакалавр'),
+        ('specialist', 'Специалист'),
+        ('master', 'Магистр'),
+        ('phd', 'Кандидат наук'),
+        ('doctor', 'Доктор наук'),
+        ('mba', 'MBA'),
+    ]
+
     # Персональные данные
     first_name = models.CharField(max_length=20, default='', blank=True)
     middle_name = models.CharField(max_length=50, default='', blank=True)
@@ -57,7 +65,7 @@ class Profile(models.Model):
 
     # Образование
     edu_level = models.CharField(
-        max_length=30, choices=EDU_LEVELS, default='nothing', blank=True
+        max_length=30, choices=EDUCATION_CHOICES, default='nothing', blank=True
     )
     institution_name = models.CharField(max_length=200, default='', blank=True)
     graduation_year = models.SmallIntegerField(null=True, blank=True)

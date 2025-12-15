@@ -64,6 +64,3 @@ class UserProfileView(APIView):
         response = Response(status=status.HTTP_204_NO_CONTENT)
         response['X-Message'] = 'User has been deleted!'
         return response
-
-
-

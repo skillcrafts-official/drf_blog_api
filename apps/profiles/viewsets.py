@@ -1,13 +1,15 @@
-from rest_framework import status, viewsets
+from django.core.cache import cache
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.permissions import IsAuthenticated
 
 from apps.profiles.models import Profile, WorkFormat
 from apps.profiles.serializers import (
     WorkFormatSerializer, ProfileSerializer
 )
-from apps.profiles.filters import ProfileFilters
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
@@ -56,12 +58,25 @@ class BaseModelViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
 
 
-# class ProfilesView(viewsets.ModelViewSet):
-#     """Для выдачи списка профилей"""
-#     queryset = Profile.objects.filter(user__is_active=True)
-#     serializer_class = ProfileSerializer
-#     filterset_class = ProfileFilters
-    # lookup_field = 'pk'
+class ProfilesView(viewsets.ModelViewSet):
+    """Для выдачи списка профилей"""
+    queryset = Profile.objects.filter(user__is_active=True)
+    serializer_class = ProfileSerializer
+
+    @action(detail=False, methods=['get'])
+    def education_levels(self, request):
+        """
+        Кастомный ендпоинт выдаёт список языков
+        для компонентов выбора на клиенте
+        """
+        cache_key = 'education_choices'
+        choices = cache.get(cache_key)
+
+        if not choices:
+            choices = dict(Profile.EDUCATION_CHOICES)
+            cache.set(cache_key, choices, timeout=3600)  # Кэш на 1 час
+
+        return Response(choices)
 
 
 class WorkFormatView(BaseModelViewSet):
