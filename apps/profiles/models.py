@@ -230,7 +230,7 @@ class ProfileSkill(models.Model):
         'Уровень владения',
         choices=[(i, f"{i}/10") for i in range(1, 11)],
         validators=[MinValueValidator(1), MaxValueValidator(10)],
-        null=True,
+        default=1,
         blank=True
     )
     is_current = models.BooleanField(
