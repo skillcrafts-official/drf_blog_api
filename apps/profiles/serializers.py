@@ -115,13 +115,53 @@ class ProfileImageSerializer(serializers.ModelSerializer):
         fields = ['avatar_url', 'wallpaper_url']
 
 
+class SkillSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Skill
+        fields = '__all__'
+
+
 class ProfileSkillSerializer(serializers.ModelSerializer):
+    skill_info = SkillSerializer(source='skill', read_only=True)
     skill_name = serializers.CharField(max_length=50, write_only=True)
 
     class Meta:
         model = ProfileSkill
-        exclude = ['profile']
-        read_only_fields = ['skill']
+        exclude = ['skill', 'profile']
+
+    def create(self, validated_data):
+        skill_name = validated_data.pop('skill_name', None)
+
+        if not skill_name:
+            raise serializers.ValidationError({
+                "detail": "No skill name!"
+            })
+
+        skill, _ = Skill.objects.get_or_create(name=skill_name)
+
+        profile_id = self.context['request'].user.id
+        profile = Profile.objects.get(pk=profile_id)
+
+        if ProfileSkill.objects.filter(skill=skill, profile=profile).exists():
+            raise serializers.ValidationError({
+                "detail": (
+                    f"Skill name '{skill.name.upper()}' already exists "
+                    f"for profile: {profile.pk}"
+                )
+            })
+
+        validated_data['profile'] = profile
+        validated_data['skill'] = skill
+        return super().create(validated_data)
+
+
+class CreateProfileSkillSerializer(serializers.ModelSerializer):
+    skill_name = serializers.CharField(max_length=50, write_only=True)
+
+    class Meta:
+        model = ProfileSkill
+        exclude = ['skill', 'profile']
 
     def create(self, validated_data):
         skill_name = validated_data.pop('skill_name', None)
@@ -154,10 +194,3 @@ class PrivacyProfileSkillSerializer(BaseModelSerializer):
     class Meta:
         model = ProfileSkill
         fields = ['privacy']
-
-
-class SkillSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Skill
-        fields = '__all__'

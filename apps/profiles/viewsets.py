@@ -1,6 +1,8 @@
 from django.core.cache import cache
+from django.db.models import F
 
 from rest_framework import viewsets
+from rest_framework.serializers import ModelSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
@@ -8,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.profiles.models import Profile, ProfileSkill, Skill, WorkFormat
 from apps.profiles.serializers import (
-    ProfileSkillSerializer, SkillSerializer, WorkFormatSerializer,
+    CreateProfileSkillSerializer, ProfileSkillSerializer, SkillSerializer, WorkFormatSerializer,
     ProfileSerializer, PrivacyProfileSkillSerializer
 )
 
@@ -90,6 +92,18 @@ class ProfileSkillViewSet(BaseModelViewSet):
     queryset = ProfileSkill.objects.all()
     serializer_class = ProfileSkillSerializer
     lookup_field = 'profile'
+
+    def get_queryset(self):
+        return ProfileSkill.objects.annotate(
+            skill_name=F('skill__name')
+        ).select_related('skill')
+
+    # def get_serializer_class(self):
+        # if self.action in ['create', 'update', 'partial_update']:
+        #     return CreateProfileSkillSerializer
+        # elif self.action == 'list':
+        #     return ProfileSkillSerializer
+        # return super().get_serializer_class()
 
 
 class PrivacyProfileSkillViewSet(BaseModelViewSet):
