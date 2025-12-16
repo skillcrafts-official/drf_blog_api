@@ -6,26 +6,25 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
-from apps.profiles.models import Profile, WorkFormat
+from apps.profiles.models import Profile, ProfileSkill, Skill, WorkFormat
 from apps.profiles.serializers import (
-    WorkFormatSerializer, ProfileSerializer
+    ProfileSkillSerializer, SkillSerializer, WorkFormatSerializer,
+    ProfileSerializer, PrivacyProfileSkillSerializer
 )
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
-    # def create(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     if user.pk != kwargs['user_id']:
-    #         raise PermissionDenied()
-    #     return super().update(request, *args, **kwargs)
-
-    def get_user_id(self, **kwargs):
-        return kwargs.get('user_id', None)
-
-    def get_profile_id(self, **kwargs):
-        return kwargs.get('profile', None)
+    def create(self, request, *args, **kwargs) -> Response:
+        user = request.user
+        user_id = kwargs.get('user_id', None)
+        profile_id = kwargs.get('profile', None)
+        if profile_id is None:
+            profile_id = request.data.get('profile', None)
+        if user.pk != (user_id if user_id else profile_id):
+            raise PermissionDenied()
+        return super().create(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs) -> Response:
         user = request.user
@@ -45,7 +44,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
             profile_id = request.data.get('profile', None)
         if user.pk != (user_id if user_id else profile_id):
             raise PermissionDenied()
-        return super().update(request, *args, **kwargs)
+        return super().partial_update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs) -> Response:
         user = request.user
@@ -55,7 +54,7 @@ class BaseModelViewSet(viewsets.ModelViewSet):
             profile_id = request.data.get('profile', None)
         if user.pk != (user_id if user_id else profile_id):
             raise PermissionDenied()
-        return super().update(request, *args, **kwargs)
+        return super().destroy(request, *args, **kwargs)
 
 
 class ProfilesView(viewsets.ModelViewSet):
@@ -84,3 +83,23 @@ class WorkFormatView(BaseModelViewSet):
     queryset = WorkFormat.objects.all()
     serializer_class = WorkFormatSerializer
     lookup_field = 'profile'
+
+
+class ProfileSkillViewSet(BaseModelViewSet):
+    """Для выдачи предпочитаемых форматов работы"""
+    queryset = ProfileSkill.objects.all()
+    serializer_class = ProfileSkillSerializer
+    lookup_field = 'profile'
+
+
+class PrivacyProfileSkillViewSet(BaseModelViewSet):
+    queryset = ProfileSkill.objects.all()
+    serializer_class = PrivacyProfileSkillSerializer
+    lookup_field = 'profile'
+
+
+class SkillViewSet(BaseModelViewSet):
+    """Для выдачи предпочитаемых форматов работы"""
+    queryset = Skill.objects.all()
+    serializer_class = SkillSerializer
+    lookup_field = 'pk'

@@ -405,7 +405,9 @@ class Language(models.Model):
         on_delete=models.CASCADE,
         related_name='languages'
     )
-    name = models.CharField(max_length=50,  choices=LANGUAGES)
+    name = models.CharField(
+        max_length=50, choices=LANGUAGES, null=True, blank=True
+    )
     level = models.CharField(
         max_length=2, choices=LANGUAGE_LEVELS, default='A1'
     )

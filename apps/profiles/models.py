@@ -1,6 +1,10 @@
 from datetime import date
+from typing import Iterable
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
+from django.db.models.base import ModelBase
+from requests import delete
 from rest_framework.exceptions import NotFound, PermissionDenied
 
 from apps.accounts.models import User
@@ -13,6 +17,12 @@ WORK_FORMATS = [
     ('any', 'любой')
 ]
 
+PRIVACIES = [
+    ('all', 'видно всем'),
+    ('not_all', 'всем, кроме...'),
+    ('nobody', 'никому')
+]
+
 
 def user_avatar_path(instance, filename):
     """Персонализируется путь к аватару пользователя"""
@@ -22,6 +32,57 @@ def user_avatar_path(instance, filename):
 def user_wallpaper_path(instance, filename):
     """Персонализируется путь к обоям пользователя"""
     return f"wallpapers/user_{instance.user.id}/{filename}"
+
+
+class Skill(models.Model):
+    """Модель для хранения уникальных навыков"""
+    name = models.CharField(
+        'Название навыка',
+        max_length=50, unique=True, db_index=True
+    )
+    description = models.TextField(
+        'Описание',
+        blank=True, default=''
+    )
+
+    # Для отслеживания
+    created_at = models.DateTimeField(
+        'Дата создания', auto_now_add=True
+    )
+    updated_at = models.DateTimeField(
+        'Дата обновления', auto_now=True
+    )
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Навык'
+        verbose_name_plural = 'Навыки'
+
+    def __str__(self):
+        return str(self.name)
+
+
+# class SkillCluster(models.Model):
+#     """Модель для хранения уникальных кластеров навыков"""
+#     cluster_name = models.CharField(max_length=20, unique=True)
+#     order = models.PositiveSmallIntegerField(default=0, blank=True)
+
+#     # Навыки
+#     skills = models.ManyToManyField(
+#         Skill, related_name='skill_clusters', blank=True
+#     )
+#     privacy = models.CharField(
+#         verbose_name='Настройка видимости кластера навыков',
+#         max_length=10, choices=PRIVACIES, default='all', blank=True
+#     )
+
+#     class Meta:
+#         ordering = ['order', 'cluster_name']
+#         verbose_name = 'Кластер навыков'
+#         verbose_name_plural = 'Кластеры навыков'
+
+#     def __str__(self):
+#         return str(self.cluster_name)
 
 
 class Profile(models.Model):
@@ -57,11 +118,6 @@ class Profile(models.Model):
     city = models.CharField(max_length=100, default='', blank=True)
     country = models.CharField(max_length=100, default='', blank=True)
     relocation = models.CharField(max_length=200, default='', blank=True)
-    # work_formats = models.OneToOneField(
-    #     WorkFormat,
-    #     on_delete=models.CASCADE,
-    #     related_name='profile'
-    # )
 
     # Образование
     edu_level = models.CharField(
@@ -168,25 +224,52 @@ class WorkFormat(models.Model):
         verbose_name_plural = 'Форматы работы'
 
 
-# class RussianEduLevel(models.Model):
-#     """
-#     Модель для хранения уровней образования в России
-#     """
-#     edu_level = models.CharField(
-#         max_length=30, choices=EDU_LEVELS, default='nothing', blank=True
-#     )
-#     # nothing = models.BooleanField(default=True, blank=True)
-#     # first_middle = models.BooleanField(default=False, blank=True)
-#     # primary_voc_edu = models.BooleanField(default=False, blank=True)
-#     # secondary_voc_edu = models.BooleanField(default=False, blank=True)
-#     # higher_voc_edu = models.BooleanField(default=False, blank=True)
+class ProfileSkill(models.Model):
+    """Модель для хранения навыков пользователя"""
+    level = models.PositiveSmallIntegerField(
+        'Уровень владения',
+        choices=[(i, f"{i}/10") for i in range(1, 11)],
+        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        null=True,
+        blank=True
+    )
+    is_current = models.BooleanField(
+        'Используется ли сейчас', default=True,
+    )
+    privacy = models.CharField(
+        verbose_name='Настройка видимости конкретного навыка',
+        max_length=10, choices=PRIVACIES, default='all', blank=True
+    )
 
-#     profile = models.OneToOneField(
-#         Profile,
-#         on_delete=models.CASCADE,
-#         related_name='edu_level'
-#     )
+    # Связь с профилем (у одного профиля может быть множество скилов)
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.CASCADE,
+        related_name='profile_skills',
+        verbose_name='Профиль'
+    )
+    # Связь с таблицей уникальных навыков
+    # (у записи о навыке может быть множество вариантов)
+    skill = models.ForeignKey(
+        Skill,
+        on_delete=models.CASCADE,
+        related_name='profile_skills',
+        verbose_name='Навык'
+    )
 
-#     class Meta:
-#         verbose_name = 'Уровни государственного образования'
-#         verbose_name_plural = 'Уровни государственного образования'
+    # Для отслеживания
+    created_at = models.DateTimeField('Дата добавления', auto_now_add=True)
+    updated_at = models.DateTimeField('Дата обновления', auto_now=True)
+
+    class Meta:
+        ordering = ['-level', 'skill']
+        unique_together = ['profile', 'skill']
+        verbose_name = 'Навык пользователя'
+        verbose_name_plural = 'Навыки пользователя'
+        indexes = [
+            models.Index(fields=['profile', 'level']),
+            models.Index(fields=['profile', 'is_current']),
+        ]
+
+    def __str__(self):
+        return str(self.skill)

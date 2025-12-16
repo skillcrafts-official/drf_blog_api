@@ -1,9 +1,36 @@
 """Сериализаторы для профилей пользователей"""
 # pylint: disable=too-few-public-methods,no-member
+from requests import delete
 from rest_framework import serializers
-from apps.profiles.models import Profile, WorkFormat
+from apps.profiles.models import Profile, ProfileSkill, Skill, WorkFormat
 
 from apps.privacy_settings.models import ProfilePrivacySettings
+
+
+class BaseModelSerializer(serializers.ModelSerializer):
+    """Базовый сериализатор"""
+
+    class Meta:
+        abstract = True
+
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+    #     representation.pop('profile', None)
+    #     # Также удаляем другие связанные поля, если нужно
+    #     representation.pop('work_experience', None)
+    #     return representation
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            if getattr(instance, 'work_experience', None):
+                if request.user.pk == instance.work_experience.profile.user.pk:
+                    return representation
+            elif request.user.pk == instance.profile.user.pk:
+                return representation
+        if representation.get('privacy', None) == 'nobody':
+            return {}
+        return representation
 
 
 class WorkFormatSerializer(serializers.ModelSerializer):
@@ -86,3 +113,50 @@ class ProfileImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['avatar_url', 'wallpaper_url']
+
+
+class ProfileSkillSerializer(serializers.ModelSerializer):
+    skill_name = serializers.CharField(max_length=50, write_only=True)
+
+    class Meta:
+        model = ProfileSkill
+        exclude = ['skill', 'profile']
+
+    def create(self, validated_data):
+        skill_name = validated_data.pop('skill_name', None)
+
+        if not skill_name:
+            raise serializers.ValidationError({
+                "detail": "No skill name!"
+            })
+
+        skill, _ = Skill.objects.get_or_create(name=skill_name)
+
+        profile_id = self.context['request'].user.id
+        profile = Profile.objects.get(pk=profile_id)
+
+        if ProfileSkill.objects.filter(skill=skill, profile=profile).exists():
+            raise serializers.ValidationError({
+                "detail": (
+                    f"Skill name '{skill.name.upper()}' already exists "
+                    f"for profile: {profile.pk}"
+                )
+            })
+
+        validated_data['profile'] = profile
+        validated_data['skill'] = skill
+        return super().create(validated_data)
+
+
+class PrivacyProfileSkillSerializer(BaseModelSerializer):
+
+    class Meta:
+        model = ProfileSkill
+        fields = ['privacy']
+
+
+class SkillSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Skill
+        fields = '__all__'
