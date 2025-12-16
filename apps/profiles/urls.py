@@ -24,7 +24,9 @@ urlpatterns = [
     ),
     path(
         '<int:profile>/skills/<int:skill>/',
-        ProfileSkillViewSet.as_view({'delete': 'destroy'}),
+        ProfileSkillViewSet.as_view({
+            'patch': 'partial_update', 'delete': 'destroy'
+        }),
         name='destroy_profile_skill'
     ),
     path(

@@ -156,6 +156,13 @@ class ProfileSkillSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
+class UpdateProfileSkillSerializer(BaseModelSerializer):
+
+    class Meta:
+        model = ProfileSkill
+        fields = ['level']
+
+
 class DeleteProfileSkillSerializer(serializers.ModelSerializer):
 
     class Meta:
