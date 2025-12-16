@@ -120,7 +120,8 @@ class ProfileSkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfileSkill
-        exclude = ['skill', 'profile']
+        exclude = ['profile']
+        read_only_fields = ['skill']
 
     def create(self, validated_data):
         skill_name = validated_data.pop('skill_name', None)

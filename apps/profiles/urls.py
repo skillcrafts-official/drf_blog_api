@@ -19,7 +19,7 @@ urlpatterns = [
     ),
     path(
         '<int:profile>/skills/',
-        ProfileSkillViewSet.as_view({'get': 'retrieve', 'post': 'create'}),
+        ProfileSkillViewSet.as_view({'get': 'list', 'post': 'create'}),
         name='get_profile_skills'
     ),
     path(
