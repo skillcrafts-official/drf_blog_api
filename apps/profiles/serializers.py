@@ -156,37 +156,11 @@ class ProfileSkillSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class CreateProfileSkillSerializer(serializers.ModelSerializer):
-    skill_name = serializers.CharField(max_length=50, write_only=True)
+class DeleteProfileSkillSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfileSkill
         exclude = ['skill', 'profile']
-
-    def create(self, validated_data):
-        skill_name = validated_data.pop('skill_name', None)
-
-        if not skill_name:
-            raise serializers.ValidationError({
-                "detail": "No skill name!"
-            })
-
-        skill, _ = Skill.objects.get_or_create(name=skill_name)
-
-        profile_id = self.context['request'].user.id
-        profile = Profile.objects.get(pk=profile_id)
-
-        if ProfileSkill.objects.filter(skill=skill, profile=profile).exists():
-            raise serializers.ValidationError({
-                "detail": (
-                    f"Skill name '{skill.name.upper()}' already exists "
-                    f"for profile: {profile.pk}"
-                )
-            })
-
-        validated_data['profile'] = profile
-        validated_data['skill'] = skill
-        return super().create(validated_data)
 
 
 class PrivacyProfileSkillSerializer(BaseModelSerializer):

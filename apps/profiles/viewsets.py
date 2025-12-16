@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.profiles.models import Profile, ProfileSkill, Skill, WorkFormat
 from apps.profiles.serializers import (
-    CreateProfileSkillSerializer, ProfileSkillSerializer, SkillSerializer, WorkFormatSerializer,
+    ProfileSkillSerializer, SkillSerializer, WorkFormatSerializer,
     ProfileSerializer, PrivacyProfileSkillSerializer
 )
 
@@ -88,22 +88,23 @@ class WorkFormatView(BaseModelViewSet):
 
 
 class ProfileSkillViewSet(BaseModelViewSet):
-    """Для выдачи предпочитаемых форматов работы"""
+    """Для выдачи навыков пользователя"""
     queryset = ProfileSkill.objects.all()
     serializer_class = ProfileSkillSerializer
     lookup_field = 'profile'
 
     def get_queryset(self):
+        if self.action == 'destroy':
+            return ProfileSkill.objects.filter(
+                profile=self.kwargs.get('profile'),
+                id=self.kwargs.get('skill')
+            ).annotate(
+                skill_name=F('skill__name')
+            ).select_related('skill')
+
         return ProfileSkill.objects.annotate(
             skill_name=F('skill__name')
         ).select_related('skill')
-
-    # def get_serializer_class(self):
-        # if self.action in ['create', 'update', 'partial_update']:
-        #     return CreateProfileSkillSerializer
-        # elif self.action == 'list':
-        #     return ProfileSkillSerializer
-        # return super().get_serializer_class()
 
 
 class PrivacyProfileSkillViewSet(BaseModelViewSet):
