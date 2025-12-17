@@ -225,6 +225,8 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'apps.accounts.authentication.GuestAuthentication',
+        'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     # 'DEFAULT_PERMISSION_CLASSES': [
@@ -265,12 +267,19 @@ SPECTACULAR_SETTINGS = {
 
 
 SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'SIGNING_KEY': SECRET_KEY,
 }
+
+# SIMPLE_JWT = {
+#     'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+#     'USER_ID_FIELD': 'id',
+#     'USER_ID_CLAIM': 'user_id',
+# }
 
 # CORS настройки
 CORS_ALLOWED_ORIGINS = [
@@ -329,9 +338,10 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
-EMAIL_USE_TLS = False
-EMAIL_HOST_USER = ''
-EMAIL_HOST_PASSWORD = ''
-DEFAULT_FROM_EMAIL = 'noreply@yourapp.com'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'postfix')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', f'noreply@{os.environ.get("DOMAIN", "localhost")}')
+SERVER_EMAIL = os.environ.get('SERVER_EMAIL', f'admin@{os.environ.get("DOMAIN", "localhost")}')

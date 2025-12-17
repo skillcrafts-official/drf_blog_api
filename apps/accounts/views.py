@@ -1,19 +1,18 @@
-from django.contrib.auth.hashers import make_password
 from django.db import IntegrityError
+from django.utils import timezone
+from django.contrib.auth.hashers import make_password
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from apps.accounts.models import User, Email
+from apps.accounts.models import User, Email, GuestConsent
 from apps.accounts.serializers import (
-    UserSerializer, EmailConfirmSerializer,
-    UserPasswordSerializer, UserEmailSerializer,
-    MyTokenObtainPairSerializer
+    UserSerializer, UserPasswordSerializer, UserEmailSerializer,
+    MyTokenObtainPairSerializer, GuestTokenObtainSerializer
 )
 
 
@@ -94,3 +93,119 @@ class UpdateUserEmailView(APIView):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+class GuestTokenObtainView(APIView):
+    """Получение гостевого токена"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = GuestTokenObtainSerializer(data={}, context={'request': request})
+        token, guest_id, user_agent, ip_address = serializer.create_guest_token()
+
+        return Response({
+            'token': token,
+            'guest_id': guest_id,
+            'user_type': 'guest',
+            'expires_in': 30 * 24 * 3600,  # 30 дней в секундах
+            'user_agent': user_agent,
+            'ip_address': ip_address,
+        })
+
+
+class MigrateGuestToUserView(APIView):
+    """Миграция гостя в полноценного пользователя"""
+
+    def post(self, request):
+        guest = request.user  # Гость из GuestAuthentication
+
+        # Валидация данных регистрации
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        # Создаём пользователя
+        user = User.objects.create(
+            primary_email=email,
+            password=password,
+            guest_origin=guest
+        )
+
+        # Мигрируем данные гостя
+        # if guest.cart_items:
+        #     # Переносим корзину
+        #     for item in guest.cart_items:
+        #         CartItem.objects.create(
+        #             user=user,
+        #             product_id=item['product_id'],
+        #             quantity=item['quantity']
+        #         )
+
+        # if guest.preferences:
+        #     # Переносим настройки
+        #     user.profile.preferences.update(guest.preferences)
+        #     user.profile.save()
+
+        # Генерируем обычный JWT для пользователя
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+
+        # Помечаем гостя как мигрированного
+        guest.migrated_to = user
+        guest.save()
+
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user_id': user.pk,
+            'guest_data_migrated': True
+        })
+
+
+class GuestConsentView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        """Регистрация согласия гостя"""
+        guest_id = request.data.get('guest_id')
+        consent_type = request.data.get('consent_type', 'basic')
+
+        # Получаем текст политики (актуальную версию)
+        policy_text = get_current_policy_text()
+        policy_hash = hash_text(policy_text)
+
+        # Сохраняем согласие
+        consent = GuestConsent.objects.create(
+            guest_id=guest_id,
+            consent_type=consent_type,
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            consent_text_hash=policy_hash
+        )
+
+        return Response({
+            'status': 'consent_registered',
+            'consent_id': consent.pk,
+            'policy_version': policy_hash[:8]
+        })
+
+
+class GuestConsentWithdrawView(APIView):
+    def post(self, request):
+        """Отзыв согласия (право быть забытым)"""
+        guest = request.user
+
+        # Помечаем согласие как отозванное
+        GuestConsent.objects.filter(
+            guest=guest,
+            is_active=True
+        ).update(
+            is_active=False,
+            withdrawn_at=timezone.now()
+        )
+
+        # Анонимизируем данные гостя
+        guest.user_agent = ''
+        guest.ip_address = None
+        guest.save()
+
+        return Response({'status': 'consent_withdrawn'})

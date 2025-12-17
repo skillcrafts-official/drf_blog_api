@@ -1,0 +1,2 @@
+# postfix/opendkim/KeyTable
+mail._domainkey.skillcrafts.ru skillcrafts.ru:mail:/etc/opendkim/keys/skillcrafts.ru/mail.private

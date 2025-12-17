@@ -1,6 +1,48 @@
+import uuid
+
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+
+
+class GuestUser(models.Model):
+    """Анонимный гость для хранения временных данных"""
+    guest_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    session_key = models.CharField(max_length=255, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity = models.DateTimeField(auto_now=True)
+    user_agent = models.TextField(null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    # Временные данные гостя
+    cart_items = models.JSONField(default=list, blank=True)
+    preferences = models.JSONField(default=dict, blank=True)
+
+    # Связь с будущим пользователем
+    migrated_to = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['guest_id']),
+            models.Index(fields=['created_at']),
+        ]
+
+
+class GuestConsent(models.Model):
+    guest = models.ForeignKey(GuestUser, on_delete=models.CASCADE)
+    consent_type = models.CharField(max_length=50)  # 'basic', 'cookies', 'marketing'
+    given_at = models.DateTimeField(auto_now_add=True)
+    ip_address = models.GenericIPAddressField()
+    user_agent = models.TextField()
+    consent_text_hash = models.CharField(max_length=64)  # Хэш текста политики на момент согласия
+
+    # Для GDPR/РКН compliance
+    is_active = models.BooleanField(default=True)
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
 
 
 class User(AbstractUser):
@@ -14,6 +56,13 @@ class User(AbstractUser):
     # date_joined = None
     username = None
     primary_email = models.EmailField(unique=True)
+
+    guest_origin = models.ForeignKey(
+        GuestUser,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='migrated_user'
+    )
 
     USERNAME_FIELD = 'primary_email'
     REQUIRED_FIELDS = []

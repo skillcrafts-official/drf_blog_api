@@ -32,13 +32,21 @@ services:
     # Меняем порт на стандартный для Django
     ports:
       - "127.0.0.1:8000:8000"  # ⚠️ ТОЛЬКО localhost, не наружу!
-    # environment:
+    environment:
       # Передаем все через .env файл
       # DB_NAME: blog_db  # Явно указываем
       # DB_USER: blog_user  # Явно указываем
       # DB_PASSWORD: ${DB_PASSWORD}  # Из .env
       # DB_HOST: db
       # DB_PORT: 5432
+      # Email configuration for Django
+      EMAIL_HOST: postfix
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: "True"
+      EMAIL_HOST_USER: ${SMTP_USER}
+      EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
+      DEFAULT_FROM_EMAIL: "noreply@${DOMAIN}"
+      SERVER_EMAIL: "admin@${DOMAIN}"
     # env_file:
       # - .env  # или .env.production
     depends_on:
@@ -61,6 +69,103 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  postfix:
+    image: docker.io/mwader/postfix-relay:latest
+    container_name: drf_postfix
+    restart: unless-stopped
+    hostname: mail.${DOMAIN}
+    domainname: ${DOMAIN}
+    volumes:
+      - ./postfix/spool:/var/spool/postfix
+      - ./postfix/logs:/var/log
+      - ./postfix/opendkim/keys:/etc/opendkim/keys:ro
+      - ./postfix/opendkim.conf:/etc/opendkim.conf:ro
+      - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
+      - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
+      - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
+      # Для SSL (если есть сертификаты)
+      # - /etc/letsencrypt/live/${DOMAIN}/fullchain.pem:/etc/ssl/certs/ssl-cert-snakeoil.pem:ro
+      # - /etc/letsencrypt/live/${DOMAIN}/privkey.pem:/etc/ssl/private/ssl-cert-snakeoil.key:ro
+    environment:
+      # Основные настройки
+      POSTFIX_myhostname: mail.${DOMAIN}
+      POSTFIX_mydomain: ${DOMAIN}
+      POSTFIX_myorigin: $mydomain
+      POSTFIX_mydestination: $myhostname, localhost.$mydomain, localhost, $mydomain
+      
+      # Настройки для отправки (чтобы не попадать в спам)
+      POSTFIX_mynetworks: 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128 172.16.0.0/12 10.0.0.0/8
+      POSTFIX_smtpd_recipient_restrictions: permit_mynetworks, permit_sasl_authenticated, reject_unauth_destination
+      POSTFIX_smtpd_relay_restrictions: permit_mynetworks, permit_sasl_authenticated, defer_unauth_destination
+      
+      # Аутентификация
+      POSTFIX_smtpd_sasl_auth_enable: "yes"
+      POSTFIX_smtpd_sasl_type: cyrus
+      POSTFIX_smtpd_sasl_path: smtpd
+      POSTFIX_smtpd_sasl_security_options: noanonymous
+      POSTFIX_smtpd_sasl_local_domain: $myhostname
+      POSTFIX_broken_sasl_auth_clients: "yes"
+      
+      # TLS/SSL
+      POSTFIX_smtp_use_tls: "yes"
+      POSTFIX_smtpd_use_tls: "yes"
+      POSTFIX_smtp_tls_security_level: may
+      POSTFIX_smtpd_tls_security_level: may
+      POSTFIX_smtpd_tls_cert_file: /etc/ssl/certs/ssl-cert-snakeoil.pem
+      POSTFIX_smtpd_tls_key_file: /etc/ssl/private/ssl-cert-snakeoil.key
+      POSTFIX_smtpd_tls_session_cache_database: btree:${data_directory}/smtpd_scache
+      POSTFIX_smtp_tls_session_cache_database: btree:${data_directory}/smtp_scache
+      
+      # Ограничения для защиты от спама
+      POSTFIX_smtpd_hard_error_limit: 3
+      POSTFIX_smtpd_soft_error_limit: 1
+      POSTFIX_smtpd_error_sleep_time: 1s
+      
+      # DKIM
+      POSTFIX_milter_default_action: accept
+      POSTFIX_milter_protocol: 6
+      POSTFIX_smtpd_milters: inet:localhost:8891
+      POSTFIX_non_smtpd_milters: inet:localhost:8891
+      
+      # Логирование
+      POSTFIX_debug_peer_level: 2
+      POSTFIX_debugger_command: PATH=/bin:/usr/bin:/usr/local/bin:/usr/X11R6/bin ddd $daemon_directory/$process_name $process_id & sleep 5
+      
+      # SASL пользователи (автоматически создадутся)
+      SASL_PASSWD: ${SMTP_USER}:${SMTP_PASSWORD}
+      
+      # Релеи (если нужно через внешний SMTP)
+      # RELAY_HOST: [smtp.gmail.com]:587
+      # RELAY_USERNAME: your-email@gmail.com
+      # RELAY_PASSWORD: your-password
+      
+    ports:
+      - "127.0.0.1:25:25"    # SMTP
+      - "127.0.0.1:587:587"  # Submission (TLS)
+      - "127.0.0.1:465:465"  # SMTPS (SSL)
+    networks:
+      - backend
+    depends_on:
+      - opendkim
+
+  opendkim:
+    image: mvance/opendkim:latest
+    container_name: drf_opendkim
+    restart: unless-stopped
+    volumes:
+      - ./postfix/opendkim/keys:/etc/opendkim/keys
+      - ./postfix/opendkim.conf:/etc/opendkim.conf:ro
+      - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
+      - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
+      - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
+    environment:
+      DOMAIN: ${DOMAIN}
+      SELECTOR: mail
+    networks:
+      - backend
+    ports:
+      - "8891:8891"  # Для связи с Postfix
 
   # Опционально: Redis для кэша (если нужно)
   redis:

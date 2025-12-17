@@ -1,11 +1,15 @@
 from typing import Any
+import jwt
+from datetime import datetime, timedelta
+
 from django.contrib.auth.hashers import make_password
+from django.conf import settings
 
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import Token
 
-from apps.accounts.models import User, Email
+from apps.accounts.models import User, GuestUser, Email
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
@@ -41,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
         # автоматически добавляется пустой профиль
         # permissions = ProfilePrivacySettings.objects.create(profile=profile)
         return user
-    
+
     def create_new_email(self, validated_data):
         email = Email.objects.create(
             email=validated_data['email']
@@ -87,6 +91,36 @@ class UserEmailSerializer(serializers.ModelSerializer):
         fields = [
             'user', 'email'
         ]
+
+
+class GuestTokenObtainSerializer(serializers.Serializer):
+    """Сериализатор для получения гостевого токена"""
+
+    def create_guest_token(self):
+        # Создаём или находим гостя
+        request = self.context.get('request')
+
+        guest, created = GuestUser.objects.get_or_create(
+            session_key=request.session.session_key,
+            defaults={
+                'user_agent': request.META.get('HTTP_USER_AGENT', ''),
+                'ip_address': request.META.get('REMOTE_ADDR', ''),
+            }
+        )
+
+        # Обновляем активность
+        guest.save()
+
+        # Генерируем JWT
+        payload = {
+            'guest_id': str(guest.guest_id),
+            'type': 'guest',
+            'exp': datetime.utcnow() + timedelta(days=30),
+            'iat': datetime.utcnow(),
+        }
+
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        return token, guest.guest_id, guest.user_agent, guest.ip_address
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
