@@ -146,8 +146,8 @@ services:
       - "127.0.0.1:465:465"  # SMTPS (SSL)
     networks:
       - backend
-    depends_on:
-      - opendkim
+    # depends_on:
+    #   - opendkim
 
   # opendkim:
   #   image: instrumentisto/opendkim:latest
