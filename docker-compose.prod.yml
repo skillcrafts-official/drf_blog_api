@@ -149,23 +149,23 @@ services:
     # depends_on:
     #   - opendkim
 
-  # opendkim:
-  #   image: instrumentisto/opendkim:latest
-  #   container_name: drf_opendkim
-  #   restart: unless-stopped
-  #   volumes:
-  #     - ./postfix/opendkim/keys:/etc/opendkim/keys
-  #     - ./postfix/opendkim.conf:/etc/opendkim.conf:ro
-  #     - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
-  #     - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
-  #     - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
-  #   environment:
-  #     DOMAIN: ${DOMAIN}
-  #     SELECTOR: mail
-  #   networks:
-  #     - backend
-  #   ports:
-  #     - "8891:8891"  # Для связи с Postfix
+  opendkim:
+    image: instrumentisto/opendkim:latest
+    container_name: drf_opendkim
+    restart: unless-stopped
+    volumes:
+      - ./postfix/opendkim/keys:/etc/opendkim/keys
+      - ./postfix/opendkim.conf:/etc/opendkim.conf:ro
+      - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
+      - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
+      - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
+    environment:
+      DOMAIN: ${DOMAIN}
+      SELECTOR: mail
+    networks:
+      - backend
+    ports:
+      - "8891:8891"  # Для связи с Postfix
 
   # Опционально: Redis для кэша (если нужно)
   redis:
