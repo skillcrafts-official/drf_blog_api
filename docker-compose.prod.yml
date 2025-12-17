@@ -152,7 +152,7 @@ services:
     - .env
 
   opendkim:
-    image: instrumentisto/opendkim:latest
+    image: boky/opendkim:latest
     container_name: drf_opendkim
     restart: unless-stopped
     volumes:
@@ -161,9 +161,9 @@ services:
       - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
       - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
       - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
-    environment:
-      DOMAIN: ${DOMAIN}
-      SELECTOR: mail
+    # environment:
+    #   DOMAIN: ${DOMAIN}
+    #   SELECTOR: mail
     networks:
       - backend
     ports:
