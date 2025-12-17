@@ -47,8 +47,8 @@ services:
       EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
       DEFAULT_FROM_EMAIL: "noreply@${DOMAIN}"
       SERVER_EMAIL: "admin@${DOMAIN}"
-    # env_file:
-      # - .env  # или .env.production
+    env_file:
+      - .env  # или .env.production
     depends_on:
       db:
         condition: service_healthy
