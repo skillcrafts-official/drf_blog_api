@@ -153,8 +153,8 @@ services:
 
   opendkim:
     build:
-    context: .
-    dockerfile: Dockerfile.opendkim
+      context: .
+      dockerfile: Dockerfile.opendkim
     container_name: drf_opendkim
     restart: unless-stopped
     volumes:
