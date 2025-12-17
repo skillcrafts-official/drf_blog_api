@@ -150,7 +150,7 @@ services:
       - opendkim
 
   opendkim:
-    image: mvance/opendkim:latest
+    image: instrumentisto/opendkim:latest
     container_name: drf_opendkim
     restart: unless-stopped
     volumes:
