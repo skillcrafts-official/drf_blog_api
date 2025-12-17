@@ -152,18 +152,13 @@ services:
     - .env
 
   opendkim:
-    image: boky/opendkim:latest
+    build:
+    context: .
+    dockerfile: Dockerfile.opendkim
     container_name: drf_opendkim
     restart: unless-stopped
     volumes:
       - ./postfix/opendkim/keys:/etc/opendkim/keys
-      - ./postfix/opendkim.conf:/etc/opendkim.conf:ro
-      - ./postfix/opendkim/TrustedHosts:/etc/opendkim/TrustedHosts:ro
-      - ./postfix/opendkim/KeyTable:/etc/opendkim/KeyTable:ro
-      - ./postfix/opendkim/SigningTable:/etc/opendkim/SigningTable:ro
-    # environment:
-    #   DOMAIN: ${DOMAIN}
-    #   SELECTOR: mail
     networks:
       - backend
     ports:

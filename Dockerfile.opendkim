@@ -1,0 +1,21 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    opendkim \
+    opendkim-tools \
+    curl \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем конфигурационные файлы
+COPY postfix/opendkim.conf /etc/opendkim.conf
+COPY postfix/opendkim/TrustedHosts /etc/opendkim/TrustedHosts
+COPY postfix/opendkim/KeyTable /etc/opendkim/KeyTable  
+COPY postfix/opendkim/SigningTable /etc/opendkim/SigningTable
+COPY postfix/opendkim/keys /etc/opendkim/keys
+
+RUN chown -R opendkim:opendkim /etc/opendkim
+
+EXPOSE 8891
+
+CMD ["opendkim", "-f", "-x", "/etc/opendkim.conf"]
