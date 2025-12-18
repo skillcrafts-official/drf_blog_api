@@ -1,3 +1,4 @@
+import hashlib
 from typing import Any
 import jwt
 from datetime import datetime, timedelta
@@ -5,11 +6,11 @@ from datetime import datetime, timedelta
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 
-from rest_framework import serializers
+from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import Token
 
-from apps.accounts.models import User, GuestUser, Email
+from apps.accounts.models import GuestConsent, User, GuestUser, Email
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
@@ -96,6 +97,28 @@ class UserEmailSerializer(serializers.ModelSerializer):
 class GuestTokenObtainSerializer(serializers.Serializer):
     """Сериализатор для получения гостевого токена"""
 
+    def get_current_consent_text(self):
+        """Возвращает актуальный текст соглашения"""
+        # Можно хранить в БД, файле или settings
+        texts = {
+            'registration': """
+            Я даю согласие на обработку моих персональных данных, 
+            предоставляемых в качестве гостя сайта, включая сбор, 
+            запись, систематизацию, накопление, хранение, уточнение, 
+            извлечение, использование, передачу (распространение, 
+            предоставление, доступ), обезличивание, блокирование, 
+            удаление, уничтожение персональных данных.
+            
+            Согласие действует до момента его отзыва.
+            Полный текст политики: /privacy-policy
+            """
+        }
+        return texts.get('registration', '')
+
+    def generate_text_hash(self, text):
+        """Генерирует хэш текста соглашения"""
+        return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
     def create_guest_token(self):
         # Создаём или находим гостя
         request = self.context.get('request')
@@ -110,6 +133,36 @@ class GuestTokenObtainSerializer(serializers.Serializer):
 
         # Обновляем активность
         guest.save()
+
+        active_consent = GuestConsent.objects.filter(
+            guest=guest,
+            is_active=True,
+            consent_type='registration'
+        ).first()
+
+        if not active_consent:
+            # Если согласия нет - создаём новое
+            consent_text = self.get_current_consent_text()
+            consent_hash = self.generate_text_hash(consent_text)
+
+            guest_consent = GuestConsent.objects.create(
+                guest=guest,
+                consent_type='registration',
+                ip_address=guest.ip_address,
+                user_agent=guest.user_agent,
+                consent_text_hash=consent_hash,
+                # is_active=True по умолчанию
+                # withdrawn_at=None по умолчанию
+            )
+
+        # Проверяем, не было ли согласие отозвано
+        if GuestConsent.objects.filter(
+            guest=guest, is_active=False, consent_type='registration'
+        ).exists():
+            raise serializers.ValidationError({
+                'detail': 'Согласие на обработку данных было отозвано',
+                'code': 'consent_withdrawn'
+            })
 
         # Генерируем JWT
         payload = {

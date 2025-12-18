@@ -20,8 +20,8 @@ class GuestAuthentication(BaseAuthentication):
         try:
             # Декодируем JWT
             payload = jwt.decode(
-                token, 
-                settings.SECRET_KEY, 
+                token,
+                settings.SECRET_KEY,
                 algorithms=['HS256']
             )
 
