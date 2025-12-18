@@ -97,6 +97,12 @@ class UserEmailSerializer(serializers.ModelSerializer):
 class GuestTokenObtainSerializer(serializers.Serializer):
     """Сериализатор для получения гостевого токена"""
 
+    def validate(self, attrs):
+        """
+        Главный метод валидации, который вызывается при serializer.is_valid()
+        """
+        return self.create_guest_token()
+
     def get_current_consent_text(self):
         """Возвращает актуальный текст соглашения"""
         # Можно хранить в БД, файле или settings
@@ -119,10 +125,39 @@ class GuestTokenObtainSerializer(serializers.Serializer):
         """Генерирует хэш текста соглашения"""
         return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
+    def generate_guest_token(self, guest):
+        """Генерация access token для гостя"""
+        from rest_framework_simplejwt.tokens import AccessToken
+
+        token = AccessToken()
+        token['group'] = 'guest'
+        token['guest_id'] = str(guest.guest_id)
+        token['type'] = 'guest'
+        token['permissions'] = ['guest_access']  # Ограниченные права
+
+        return token
+
+    def generate_guest_refresh_token(self, guest):
+        """Генерация refresh token для гостя"""
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        refresh = RefreshToken()
+        refresh['type'] = 'guest'
+        refresh['guest_id'] = str(guest.guest_id)
+
+        return refresh
+
     def create_guest_token(self):
-        # Создаём или находим гостя
+        """Генерация гостевого токена"""
         request = self.context.get('request')
 
+        if not request:
+            raise serializers.ValidationError({
+                'detail': 'Request context is required for guest token',
+                'code': 'no_request_context'
+            })
+
+        # Создаём или находим гостя
         guest, created = GuestUser.objects.get_or_create(
             session_key=request.session.session_key,
             defaults={
@@ -164,16 +199,18 @@ class GuestTokenObtainSerializer(serializers.Serializer):
                 'code': 'consent_withdrawn'
             })
 
-        # Генерируем JWT
-        payload = {
-            'guest_id': str(guest.guest_id),
-            'type': 'guest',
-            'exp': datetime.utcnow() + timedelta(days=30),
-            'iat': datetime.utcnow(),
-        }
+        # Генерируем гостевой JWT
+        token = self.generate_guest_token(guest)
+        refresh = self.generate_guest_refresh_token(guest)
 
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        return token, guest.guest_id, guest.user_agent, guest.ip_address
+        # return token, guest.guest_id, guest.user_agent, guest.ip_address
+        return {
+            'refresh': str(refresh),
+            'access': str(token),
+            'user_type': 'guest',
+            'guest_id': str(guest.guest_id),
+            'user_id': str(guest.guest_id),  # Для совместимости
+        }
 
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -181,20 +218,46 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs: dict[str, Any]) -> dict[str, str]:
         data = super().validate(attrs)
 
-        data['user_id'] = self.user.pk
+        if data.get('group') != 'guest':
+            # user = self.user
+            # data.update({
+            #     'user_id': user.pk,
+            #     'email': user.email,
+            #     'is_staff': user.is_staff,
+            #     'group': 'admin' if user.is_staff else 'user',
+            # })
+
+            data['user_id'] = self.user.pk
 
         return data
 
     @classmethod
     def get_token(cls, user: User) -> Token:
-        token = super().get_token(user)
+        # token = super().get_token(user)
 
+        # token['user_id'] = user.pk
+        # if user.is_staff:
+        #     token['group'] = 'admin'
+        # else:
+        #     token['group'] = 'user'
+        #     # token['role'] = user.account_type
+
+        # return token
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        token = RefreshToken.for_user(user)
+
+        # Добавляем кастомные claims
         token['user_id'] = user.pk
+        token['email'] = user.primary_email
+        token['type'] = 'user'  # Тип токена
+
         if user.is_staff:
             token['group'] = 'admin'
+            token['permissions'] = ['full_access']
         else:
             token['group'] = 'user'
-            # token['role'] = user.account_type
+            token['permissions'] = ['user_access']
 
         return token
 

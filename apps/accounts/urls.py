@@ -6,7 +6,7 @@ from apps.accounts.views import (
     UserView, MyTokenObtainPairView, GuestTokenObtainView,
     UpdateUserPasswordView, UpdateUserEmailView
 )
-from apps.accounts.authentication import GuestAuthentication
+from apps.accounts.authentication import UnifiedJWTAuthentication
 
 
 urlpatterns = [

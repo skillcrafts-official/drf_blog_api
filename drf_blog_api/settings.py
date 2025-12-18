@@ -225,7 +225,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'apps.accounts.authentication.GuestAuthentication',
+        'apps.accounts.authentication.UnifiedJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -273,6 +273,11 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'SIGNING_KEY': SECRET_KEY,
+    'TOKEN_TYPE_CLAIM': 'type',
+
+    # Настройки для гостевых токенов
+    'GUEST_TOKEN_LIFETIME': timedelta(days=30),
+    'USER_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # SIMPLE_JWT = {

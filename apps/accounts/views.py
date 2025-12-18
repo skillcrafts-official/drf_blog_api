@@ -97,20 +97,20 @@ class MyTokenObtainPairView(TokenObtainPairView):
 
 class GuestTokenObtainView(APIView):
     """Получение гостевого токена"""
+    serializer_class = GuestTokenObtainSerializer
     permission_classes = [AllowAny]
 
-    def post(self, request):
-        serializer = GuestTokenObtainSerializer(data={}, context={'request': request})
-        token, guest_id, user_agent, ip_address = serializer.create_guest_token()
+    def post(self, request, *args, **kwargs):
+        # Логируем создание гостевого токена
+        print(f"Creating guest token for session: {request.session.session_key}")
 
-        return Response({
-            'token': token,
-            'guest_id': guest_id,
-            'user_type': 'guest',
-            'expires_in': 30 * 24 * 3600,  # 30 дней в секундах
-            'user_agent': user_agent,
-            'ip_address': ip_address,
-        })
+        serializer = self.serializer_class(
+            data={},  # Пустые данные
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+
+        return Response(serializer.validated_data)
 
 
 class MigrateGuestToUserView(APIView):
@@ -163,7 +163,7 @@ class MigrateGuestToUserView(APIView):
 
 class GuestConsentView(APIView):
     permission_classes = [AllowAny]
-    
+
     def post(self, request):
         """Регистрация согласия гостя"""
         guest_id = request.data.get('guest_id')
