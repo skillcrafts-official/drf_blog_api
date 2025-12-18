@@ -14,10 +14,11 @@ from apps.profiles.serializers import (
     WorkFormatSerializer,
     ProfileSerializer, PrivacyProfileSkillSerializer
 )
+from apps.accounts.permissions import AllowGuests
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowGuests]
 
     def create(self, request, *args, **kwargs) -> Response:
         user = request.user

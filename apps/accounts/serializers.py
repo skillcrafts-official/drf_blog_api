@@ -1,5 +1,6 @@
 import hashlib
 from typing import Any
+import uuid
 import jwt
 from datetime import datetime, timedelta
 
@@ -125,27 +126,27 @@ class GuestTokenObtainSerializer(serializers.Serializer):
         """Генерирует хэш текста соглашения"""
         return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
-    def generate_guest_token(self, guest):
-        """Генерация access token для гостя"""
-        from rest_framework_simplejwt.tokens import AccessToken
+    # def generate_guest_token(self, guest):
+    #     """Генерация access token для гостя"""
+    #     from rest_framework_simplejwt.tokens import AccessToken
 
-        token = AccessToken()
-        token['group'] = 'guest'
-        token['guest_id'] = str(guest.guest_id)
-        token['type'] = 'guest'
-        token['permissions'] = ['guest_access']  # Ограниченные права
+    #     token = AccessToken()
+    #     token['group'] = 'guest'
+    #     token['guest_id'] = str(guest.guest_id)
+    #     token['type'] = 'guest'
+    #     token['permissions'] = ['guest_access']  # Ограниченные права
 
-        return token
+    #     return token
 
-    def generate_guest_refresh_token(self, guest):
-        """Генерация refresh token для гостя"""
-        from rest_framework_simplejwt.tokens import RefreshToken
+    # def generate_guest_refresh_token(self, guest):
+    #     """Генерация refresh token для гостя"""
+    #     from rest_framework_simplejwt.tokens import RefreshToken
 
-        refresh = RefreshToken()
-        refresh['type'] = 'guest'
-        refresh['guest_id'] = str(guest.guest_id)
+    #     refresh = RefreshToken()
+    #     refresh['type'] = 'guest'
+    #     refresh['guest_id'] = str(guest.guest_id)
 
-        return refresh
+    #     return refresh
 
     def create_guest_token(self):
         """Генерация гостевого токена"""
@@ -157,9 +158,12 @@ class GuestTokenObtainSerializer(serializers.Serializer):
                 'code': 'no_request_context'
             })
 
+        # Генерируем уникальный guest_id
+        guest_id = str(uuid.uuid4())
+
         # Создаём или находим гостя
         guest, created = GuestUser.objects.get_or_create(
-            session_key=request.session.session_key,
+            guest_id=guest_id,
             defaults={
                 'user_agent': request.META.get('HTTP_USER_AGENT', ''),
                 'ip_address': request.META.get('REMOTE_ADDR', ''),
@@ -199,14 +203,31 @@ class GuestTokenObtainSerializer(serializers.Serializer):
                 'code': 'consent_withdrawn'
             })
 
-        # Генерируем гостевой JWT
-        token = self.generate_guest_token(guest)
-        refresh = self.generate_guest_refresh_token(guest)
+        # Генерируем JWT токен для гостя
+        from rest_framework_simplejwt.tokens import RefreshToken
 
-        # return token, guest.guest_id, guest.user_agent, guest.ip_address
+        refresh = RefreshToken()
+        refresh['type'] = 'guest'
+        refresh['guest_id'] = str(guest.guest_id)
+        refresh['group'] = 'guest'
+        refresh['permissions'] = ['guest_access']
+        refresh['user_id'] = str(guest.guest_id)
+
+        # В access токен (ОБЯЗАТЕЛЬНО!)
+        refresh.access_token['type'] = 'guest'  # ← И ЭТО ТОЖЕ ВАЖНО!
+        refresh.access_token['guest_id'] = str(guest.guest_id)
+        refresh.access_token['user_id'] = str(guest.guest_id)
+
+        # Устанавливаем время жизни
+        from datetime import timedelta
+        from django.conf import settings
+
+        guest_lifetime = settings.SIMPLE_JWT.get('GUEST_TOKEN_LIFETIME', timedelta(days=30))
+        refresh.access_token.set_exp(lifetime=guest_lifetime)
+
         return {
             'refresh': str(refresh),
-            'access': str(token),
+            'access': str(refresh.access_token),
             'user_type': 'guest',
             'guest_id': str(guest.guest_id),
             'user_id': str(guest.guest_id),  # Для совместимости
@@ -215,41 +236,13 @@ class GuestTokenObtainSerializer(serializers.Serializer):
 
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
-    def validate(self, attrs: dict[str, Any]) -> dict[str, str]:
-        data = super().validate(attrs)
-
-        if data.get('group') != 'guest':
-            # user = self.user
-            # data.update({
-            #     'user_id': user.pk,
-            #     'email': user.email,
-            #     'is_staff': user.is_staff,
-            #     'group': 'admin' if user.is_staff else 'user',
-            # })
-
-            data['user_id'] = self.user.pk
-
-        return data
-
     @classmethod
-    def get_token(cls, user: User) -> Token:
-        # token = super().get_token(user)
-
-        # token['user_id'] = user.pk
-        # if user.is_staff:
-        #     token['group'] = 'admin'
-        # else:
-        #     token['group'] = 'user'
-        #     # token['role'] = user.account_type
-
-        # return token
-        from rest_framework_simplejwt.tokens import RefreshToken
-
-        token = RefreshToken.for_user(user)
-
+    def get_token(cls, user):
+        token = super().get_token(user)
+        
         # Добавляем кастомные claims
         token['user_id'] = user.pk
-        token['email'] = user.primary_email
+        token['email'] = user.primary_email if hasattr(user, 'primary_email') else user.email
         token['type'] = 'user'  # Тип токена
 
         if user.is_staff:
@@ -258,11 +251,22 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             token['group'] = 'user'
             token['permissions'] = ['user_access']
-
+            
         return token
 
-    def create(self, validated_data):
-        pass
-
-    def update(self, instance, validated_data):
-        pass
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        
+        refresh = self.get_token(self.user)
+        
+        # Обновляем данные с правильными токенами
+        data.update({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user_id': self.user.pk,
+            'email': self.user.primary_email if hasattr(self.user, 'primary_email') else self.user.email,
+            'group': 'admin' if self.user.is_staff else 'user',
+            'user_type': 'user'
+        })
+        
+        return data

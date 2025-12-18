@@ -46,6 +46,8 @@ urlpatterns = [
         'auth/guest-token/', GuestTokenObtainView.as_view(),
         name='gest_token_obtain_pair'
     ),
+    
+    # Тестирование
     # path(
     #     'auth/token/refresh/', TokenRefreshView.as_view(),
     #     name='token_refresh'

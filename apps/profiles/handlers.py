@@ -1,7 +1,7 @@
 from os import name
 from django.db import transaction
 
-from apps.profiles.models import Profile, WorkFormat, RussianEduLevel
+from apps.profiles.models import Profile, WorkFormat
 from apps.privacy_settings.models import ProfilePrivacySettings
 from apps.resume.models import Summary, WorkExperience, Language
 

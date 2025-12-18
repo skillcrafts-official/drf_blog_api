@@ -87,36 +87,36 @@ class PrivacyWorkExperienceSerializer(BaseModelSerializer):
         fields = ['privacy']
 
 
-class SkillSerializer(BaseModelSerializer):
+# class SkillSerializer(BaseModelSerializer):
 
-    class Meta:
-        model = Skill
-        fields = '__all__'
-
-
-class PrivacySkillSerializer(BaseModelSerializer):
-
-    class Meta:
-        model = Skill
-        fields = ['privacy']
+#     class Meta:
+#         model = Skill
+#         fields = '__all__'
 
 
-class SkillClusterSerializer(serializers.ModelSerializer):
-    skills = SkillSerializer(
-        # many=True, read_only=True, source='profile.skills'
-        many=True, read_only=True
-    )
+# class PrivacySkillSerializer(BaseModelSerializer):
 
-    class Meta:
-        model = SkillCluster
-        fields = '__all__'
+#     class Meta:
+#         model = Skill
+#         fields = ['privacy']
 
 
-class UpdateSkillClusterSerializer(BaseModelSerializer):
+# class SkillClusterSerializer(serializers.ModelSerializer):
+#     skills = SkillSerializer(
+#         # many=True, read_only=True, source='profile.skills'
+#         many=True, read_only=True
+#     )
 
-    class Meta:
-        model = SkillCluster
-        fields = '__all__'
+#     class Meta:
+#         model = SkillCluster
+#         fields = '__all__'
+
+
+# class UpdateSkillClusterSerializer(BaseModelSerializer):
+
+#     class Meta:
+#         model = SkillCluster
+#         fields = '__all__'
 
 
 class SertificateSerializer(BaseModelSerializer):
@@ -166,9 +166,9 @@ class SummarySerializer(BaseModelSerializer):
     experiences = SummaryWorkExperienceSerializer(
         many=True, read_only=True, source='profile.experiences'
     )
-    skills = SkillSerializer(
-        many=True, read_only=True, source='profile.skills'
-    )
+    # skills = SkillSerializer(
+    #     many=True, read_only=True, source='profile.skills'
+    # )
     sertificates = SertificateSerializer(
         many=True, read_only=True, source='profile.certificates'
     )

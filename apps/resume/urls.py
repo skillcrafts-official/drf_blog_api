@@ -4,12 +4,11 @@ from django.urls import path
 from rest_framework import routers
 
 from apps.resume.viewsets import (
-    SkillViewSet, PrivacySkillViewSet, SummaryViewSet, PrivacySummaryViewSet,
+    SummaryViewSet, PrivacySummaryViewSet,
     LanguageViewSet, UpdateLanguageViewSet, PrivacyLanguageViewSet,
     WorkExperienceViewSet,
     PrivacyWorkExperienceViewSet,
     WorkResultViewSet, PrivacyWorkResultViewSet,
-    SkillClusterViewSet,
     SertificateViewSet, UpdateSertificateViewSet, PrivacySertificateViewSet
 )
 
@@ -61,26 +60,26 @@ urlpatterns = [
         }),
         name='update_work_result_privacy_setting'
     ),
-    path(
-        'skill-clusters/',
-        SkillClusterViewSet.as_view({'get': 'list', 'post': 'create'}),
-        name='get_skill_clusters'
-    ),
+    # path(
+    #     'skill-clusters/',
+    #     SkillClusterViewSet.as_view({'get': 'list', 'post': 'create'}),
+    #     name='get_skill_clusters'
+    # ),
     # path(
     #     'skill-clusters/update/',
     #     UpdateSkillClusterViewSet.as_view({'post': 'create'}),
     #     name='update_skill_clusters'
     # ),
-    path(
-        'skills/',
-        SkillViewSet.as_view({'get': 'list', 'post': 'create'}),
-        name='get_skills'
-    ),
-    path(
-        'skills/<int:pk>/<int:user_id>/privacies/',
-        PrivacySkillViewSet.as_view({'get': 'retrieve', 'put': 'update'}),
-        name='update_skill_privacy_setting'
-    ),
+    # path(
+    #     'skills/',
+    #     SkillViewSet.as_view({'get': 'list', 'post': 'create'}),
+    #     name='get_skills'
+    # ),
+    # path(
+    #     'skills/<int:pk>/<int:user_id>/privacies/',
+    #     PrivacySkillViewSet.as_view({'get': 'retrieve', 'put': 'update'}),
+    #     name='update_skill_privacy_setting'
+    # ),
     path(
         'sertificates/',
         SertificateViewSet.as_view({'get': 'list', 'post': 'create'}),

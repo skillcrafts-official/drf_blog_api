@@ -9,10 +9,8 @@ from rest_framework.response import Response
 from apps.resume.serializers import (
     SummarySerializer, PrivacySummarySerializer,
     LanguageSerializer, UpdateLanguageSerializer, PrivacyLanguageSerializer,
-    SkillSerializer, PrivacySkillSerializer,
     WorkExperienceSerializer, PrivacyWorkExperienceSerializer,
     WorkResultSerializer, PrivacyWorkResultSerializer,
-    SkillClusterSerializer, UpdateSkillClusterSerializer,
     SertificateSerializer, UpdateSertificateSerializer,
     PrivacySertificateSerializer
 )
@@ -127,30 +125,30 @@ class PrivacyWorkResultViewSet(BaseModelViewSet):
     lookup_field = 'pk'
 
 
-class SkillClusterViewSet(BaseModelViewSet):
-    queryset = SkillCluster.objects.all()
-    serializer_class = SkillClusterSerializer
-    filterset_class = SkillClusterFilters
-    # lookup_field = 'skill-cluster-id'
+# class SkillClusterViewSet(BaseModelViewSet):
+#     queryset = SkillCluster.objects.all()
+#     serializer_class = SkillClusterSerializer
+#     filterset_class = SkillClusterFilters
+#     # lookup_field = 'skill-cluster-id'
 
 
-class UpdateSkillClusterViewSet(BaseModelViewSet):
-    queryset = SkillCluster.objects.all()
-    serializer_class = UpdateSkillClusterSerializer
-    lookup_field = 'pk'
+# class UpdateSkillClusterViewSet(BaseModelViewSet):
+#     queryset = SkillCluster.objects.all()
+#     serializer_class = UpdateSkillClusterSerializer
+#     lookup_field = 'pk'
 
 
-class SkillViewSet(BaseModelViewSet):
-    queryset = Skill.objects.all()
-    serializer_class = SkillSerializer
-    filterset_class = SkillFilters
-    # lookup_field = 'skill-id'
+# class SkillViewSet(BaseModelViewSet):
+#     queryset = Skill.objects.all()
+#     serializer_class = SkillSerializer
+#     filterset_class = SkillFilters
+#     # lookup_field = 'skill-id'
 
 
-class PrivacySkillViewSet(BaseModelViewSet):
-    queryset = Skill.objects.all()
-    serializer_class = PrivacySkillSerializer
-    lookup_field = 'pk'
+# class PrivacySkillViewSet(BaseModelViewSet):
+#     queryset = Skill.objects.all()
+#     serializer_class = PrivacySkillSerializer
+#     lookup_field = 'pk'
 
 
 class SertificateViewSet(BaseModelViewSet):

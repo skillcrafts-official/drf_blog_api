@@ -18,6 +18,24 @@ from apps.accounts.serializers import UserSerializer, EmailConfirmSerializer, My
 
 from apps.CONSTANTS import NOT_AUTHENTICATED, PERMISSION_DENIED
 
+from drf_spectacular.extensions import OpenApiAuthenticationExtension
+
+
+class UnifiedJWTAuthenticationScheme(OpenApiAuthenticationExtension):
+    """
+    Расширение для drf-spectacular для поддержки UnifiedJWTAuthentication
+    """
+    target_class = 'apps.accounts.authentication.UnifiedJWTAuthentication'
+    name = 'JWTAuth'  # Это имя должно совпадать с SECURITY_DEFINITIONS в настройках
+
+    def get_security_definition(self, auto_schema):
+        return {
+            'type': 'http',
+            'scheme': 'bearer',
+            'bearerFormat': 'JWT',
+            'description': 'JWT Bearer Token для аутентификации пользователей и гостей'
+        }
+
 
 class FixUpdateUserEmailView(OpenApiViewExtension):
     """

@@ -100,7 +100,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -226,12 +226,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'apps.accounts.authentication.UnifiedJWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication'
+        # 'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    # 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     # 'DEFAULT_PARSER_CLASSES': [
     #     'rest_framework.parsers.JSONParser',
     #     'rest_framework.parsers.FormParser',
@@ -239,50 +239,141 @@ REST_FRAMEWORK = {
     # ]
 }
 
-SPECTACULAR_SETTINGS = {
-    "TITLE": "Blog API",  # название проекта
-    "VERSION": "mvp.2025.12.4",  # версия проекта
-    "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
-    'SORT_OPERATION_PARAMETERS': False,
-    # TITLE (строка): Заголовок API в документации.
-    'DESCRIPTION': 'Добавлены ендпоинты для работы с резюме',
-    # VERSION (строка): Версия API.
-    # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
-    # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
-    # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
-    'ENUM_NAME_OVERRIDES': {
-        # Указываем, что все эти поля используют один Enum
-        'PrivacyEnum': 'apps.privacy_settings.models.PRIVACIES',
-    }
-    # SCHEMA_PATH_PREFIX
-    # Добавьте эти настройки для JWT
-    # 'SCHEMA_PATH_PREFIX': '/auth/',
-    # 'COMPONENT_SPLIT_REQUEST': True,
+# SPECTACULAR_SETTINGS = {
+#     "TITLE": "Blog API",  # название проекта
+#     "VERSION": "mvp.2025.12.4",  # версия проекта
+#     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
+#     'SORT_OPERATION_PARAMETERS': False,
+#     # TITLE (строка): Заголовок API в документации.
+#     'DESCRIPTION': 'Добавлены ендпоинты для работы с резюме',
+#     # VERSION (строка): Версия API.
+#     # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
+#     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
+#     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
+#     'ENUM_NAME_OVERRIDES': {
+#         # Указываем, что все эти поля используют один Enum
+#         'PrivacyEnum': 'apps.privacy_settings.models.PRIVACIES',
+#     }
+#     # SCHEMA_PATH_PREFIX
+#     # Добавьте эти настройки для JWT
+#     # 'SCHEMA_PATH_PREFIX': '/auth/',
+#     # 'COMPONENT_SPLIT_REQUEST': True,
     
-    # # Явно укажите методы для токен эндпоинтов
-    # 'PREPROCESSING_HOOKS': [
-    #     'drf_spectacular.hooks.preprocess_exclude_path_format',
+#     # # Явно укажите методы для токен эндпоинтов
+#     # 'PREPROCESSING_HOOKS': [
+#     #     'drf_spectacular.hooks.preprocess_exclude_path_format',
+#     # ],
+# }
+
+SPECTACULAR_SETTINGS = {
+    # Основные настройки
+    "TITLE": "Blog API",
+    "VERSION": "mvp.2025.12.4",
+    "DESCRIPTION": 'API для блога с JWT аутентификацией (пользователи + гости)',
+
+    # Включение схемы безопасности
+    "SERVE_INCLUDE_SCHEMA": True,  # Оставьте True для отладки
+    "SORT_OPERATION_PARAMETERS": False,
+
+    # Важно для правильной работы с аутентификацией:
+    "SECURITY": [
+        {"JWTAuth": []},  # Используйте имя, которое указали в UnifiedJWTAuthenticationScheme
+    ],
+
+    # Настройки безопасности для токенов
+    "SECURITY_DEFINITIONS": {
+        "JWTAuth": {  # Должно совпадать с name в UnifiedJWTAuthenticationScheme
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT Bearer Token. Для пользователей и гостей."
+        }
+    },
+
+    # Настройки Swagger UI
+    "SWAGGER_UI_SETTINGS": {
+        # "deepLinking": True,
+        "persistAuthorization": True,  # Сохраняет авторизацию при перезагрузке
+        # "displayOperationId": False,
+        # "defaultModelsExpandDepth": 1,
+        # "defaultModelExpandDepth": 1,
+        # "defaultModelRendering": "model",
+        # "displayRequestDuration": True,
+        # "docExpansion": "none",
+        # "filter": True,
+        # "operationsSorter": "method",
+        # "tagsSorter": "alpha",
+        # "showExtensions": True,
+        # "showCommonExtensions": True,
+    },
+
+    # Решение проблем с Enum
+    # "ENUM_NAME_OVERRIDES": {
+    #     "PrivacyEnum": "apps.privacy_settings.models.PRIVACIES",
+    #     # Добавьте другие Enum при необходимости
+    #     "LevelEnum": [
+    #         "apps.resume.models.Skill.level",
+    #         "apps.profiles.models.Skill.level",
+    #     ],
+    #     "EduLevelEnum": "apps.resume.models.Education.edu_level",
+    #     "StatusEnum": "apps.resume.models.Resume.status",
+    # },
+
+    # Игнорировать проблемы с Enum
+    'ENUM_RENAME_ALTERNATIVES': {
+        'LevelEnum': ['SkillLevel', 'ProficiencyLevel'],
+        'EduLevelEnum': ['EducationLevel'],
+        'StatusEnum': ['PublicationStatus', 'ResumeStatus'],
+    },
+
+    # Подавить предупреждения
+    'ENUM_ALLOW_DUPLICATE_VALUES': True,
+
+    # Дополнительные настройки для лучшей генерации схемы
+    "COMPONENT_SPLIT_REQUEST": True,
+    "COMPONENT_SPLIT_PATCH": True,
+    "COMPONENT_NO_READ_ONLY_REQUIRED": True,
+
+    # Автоматическое определение URL префикса
+    "SCHEMA_PATH_PREFIX": "/api/",
+    "SCHEMA_PATH_PREFIX_TRIM": True,
+
+    # Настройки для автогенерации операций
+    "GENERIC_ADDITIONAL_PROPERTIES": "dict",
+    "POSTPROCESSING_HOOKS": [
+        "drf_spectacular.hooks.postprocess_schema_enums",
+    ],
+
+    # Исключение ненужных эндпоинтов
+    # "PREPROCESSING_HOOKS": [
+    #     "drf_spectacular.hooks.preprocess_exclude_path_format",
     # ],
 }
 
-
+# Упрощенные настройки JWT
 SIMPLE_JWT = {
-    'AUTH_HEADER_TYPES': ('Bearer', 'JWT'),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'UPDATE_LAST_LOGIN': False,
+
+    'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+
+    # Важно для UUID
+    'USER_ID_FIELD': 'id',  # Теперь это UUIDField
+    'USER_ID_CLAIM': 'user_id',
+
+    # Для поддержки разных типов пользователей
     'TOKEN_TYPE_CLAIM': 'type',
 
-    # Для совместимости с UnifiedJWTAuthentication
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'ALGORITHM': 'HS256',
-
-    # Настройки для гостевых токенов
+    # Время жизни для гостей
     'GUEST_TOKEN_LIFETIME': timedelta(days=30),
-    'USER_TOKEN_LIFETIME': timedelta(days=1),
 }
 
 # SIMPLE_JWT = {
@@ -345,6 +436,9 @@ CSRF_TRUSTED_ORIGINS = [
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # или 'cache', 'file'
+SESSION_COOKIE_AGE = 1209600  # 2 недели в секундах
+SESSION_SAVE_EVERY_REQUEST = True
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

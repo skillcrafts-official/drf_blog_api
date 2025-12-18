@@ -7,16 +7,11 @@ from django.contrib.auth.models import AbstractUser
 
 class GuestUser(models.Model):
     """Анонимный гость для хранения временных данных"""
-    guest_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    session_key = models.CharField(max_length=255, null=True, blank=True)
+    guest_uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     last_activity = models.DateTimeField(auto_now=True)
     user_agent = models.TextField(null=True, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
-
-    # Временные данные гостя
-    cart_items = models.JSONField(default=list, blank=True)
-    preferences = models.JSONField(default=dict, blank=True)
 
     # Связь с будущим пользователем
     migrated_to = models.ForeignKey(
@@ -26,10 +21,34 @@ class GuestUser(models.Model):
     )
 
     class Meta:
+        verbose_name = "Гостевой пользователь"
+        verbose_name_plural = "Гостевые пользователи"
         indexes = [
-            models.Index(fields=['guest_id']),
+            models.Index(fields=['ip_address']),
             models.Index(fields=['created_at']),
         ]
+
+    def __str__(self):
+        return f"Guest {self.guest_id}"
+
+    @property
+    def is_authenticated(self):
+        """Всегда возвращает True для аутентификации в DRF"""
+        return True
+
+    @property
+    def is_anonymous(self):
+        """Всегда возвращает False"""
+        return False
+
+    # Добавьте метод для получения pk (иногда DRF требует)
+    @property
+    def pk(self):
+        return self.guest_id
+
+    def get_username(self):
+        """Возвращает username-подобное значение"""
+        return f"guest_{self.guest_id}"
 
 
 class GuestConsent(models.Model):
@@ -46,6 +65,7 @@ class GuestConsent(models.Model):
 
 
 class User(AbstractUser):
+    user_uuid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     email = None
     # last_login = None
     # is_superuser = None

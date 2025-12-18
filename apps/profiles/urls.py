@@ -43,5 +43,5 @@ urlpatterns = [
         'displays/skills/',
         SkillViewSet.as_view({'get': 'list'}),
         name='get_skill_list'
-    )
+    ),
 ]

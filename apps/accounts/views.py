@@ -1,3 +1,4 @@
+from apps.accounts.authentication import UnifiedJWTAuthentication
 from django.db import IntegrityError
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
@@ -19,6 +20,7 @@ from apps.accounts.serializers import (
 class UserView(ModelViewSet):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
+    permission_classes = [AllowAny]
     lookup_field = 'pk'
 
 
@@ -93,24 +95,31 @@ class UpdateUserEmailView(APIView):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    permission_classes = [AllowAny]
 
 
 class GuestTokenObtainView(APIView):
     """Получение гостевого токена"""
-    serializer_class = GuestTokenObtainSerializer
+    serializer_class = GuestTokenObtainSerializer  # Используйте исправленный сериализатор
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
-        # Логируем создание гостевого токена
-        print(f"Creating guest token for session: {request.session.session_key}")
+        ip_address = request.META.get('REMOTE_ADDR', '')
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        # print(f"Creating guest token for IP: {ip_address}")
+        # print(f"User-Agent: {user_agent}")
 
-        serializer = self.serializer_class(
-            data={},  # Пустые данные
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-
-        return Response(serializer.validated_data)
+        try:
+            serializer = self.serializer_class(
+                data={},
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.validated_data)
+        except Exception as e:
+            print(f"Error creating guest token: {str(e)}")
+            raise
 
 
 class MigrateGuestToUserView(APIView):
