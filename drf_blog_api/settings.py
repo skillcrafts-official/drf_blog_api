@@ -224,7 +224,7 @@ REST_FRAMEWORK = {
         'django_filters.rest_framework.DjangoFilterBackend',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         'apps.accounts.authentication.UnifiedJWTAuthentication',
         'rest_framework.authentication.SessionAuthentication'
     ],
@@ -274,6 +274,11 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'SIGNING_KEY': SECRET_KEY,
     'TOKEN_TYPE_CLAIM': 'type',
+
+    # Для совместимости с UnifiedJWTAuthentication
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'ALGORITHM': 'HS256',
 
     # Настройки для гостевых токенов
     'GUEST_TOKEN_LIFETIME': timedelta(days=30),
