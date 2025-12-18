@@ -23,7 +23,7 @@ class UnifiedJWTAuthentication(JWTAuthentication):
         
         if user_type == 'guest':
             # Гостевой пользователь
-            guest_id = validated_token.get('guest_id')
+            guest_id = validated_token.get('guest_uuid')
             print(f"Guest ID: {guest_id}")
             
             if not guest_id:
@@ -52,7 +52,7 @@ class UnifiedJWTAuthentication(JWTAuthentication):
         
         else:
             # Обычный пользователь
-            user_id = validated_token.get('user_id')
+            user_id = validated_token.get('user_uuid')
             print(f"User ID: {user_id}")
             
             if not user_id:

@@ -163,7 +163,7 @@ class GuestTokenObtainSerializer(serializers.Serializer):
 
         # Создаём или находим гостя
         guest, created = GuestUser.objects.get_or_create(
-            guest_id=guest_id,
+            guest_uuid=guest_id,
             defaults={
                 'user_agent': request.META.get('HTTP_USER_AGENT', ''),
                 'ip_address': request.META.get('REMOTE_ADDR', ''),
@@ -208,15 +208,15 @@ class GuestTokenObtainSerializer(serializers.Serializer):
 
         refresh = RefreshToken()
         refresh['type'] = 'guest'
-        refresh['guest_id'] = str(guest.guest_id)
+        refresh['guest_id'] = str(guest.guest_uuid)
         refresh['group'] = 'guest'
         refresh['permissions'] = ['guest_access']
-        refresh['user_id'] = str(guest.guest_id)
+        refresh['user_id'] = str(guest.guest_uuid)
 
         # В access токен (ОБЯЗАТЕЛЬНО!)
         refresh.access_token['type'] = 'guest'  # ← И ЭТО ТОЖЕ ВАЖНО!
-        refresh.access_token['guest_id'] = str(guest.guest_id)
-        refresh.access_token['user_id'] = str(guest.guest_id)
+        refresh.access_token['guest_id'] = str(guest.guest_uuid)
+        refresh.access_token['user_id'] = str(guest.guest_uuid)
 
         # Устанавливаем время жизни
         from datetime import timedelta
@@ -229,8 +229,8 @@ class GuestTokenObtainSerializer(serializers.Serializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'user_type': 'guest',
-            'guest_id': str(guest.guest_id),
-            'user_id': str(guest.guest_id),  # Для совместимости
+            'guest_id': str(guest.guest_uuid),
+            'user_id': str(guest.guest_uuid),  # Для совместимости
         }
 
 
