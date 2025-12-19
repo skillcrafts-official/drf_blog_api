@@ -9,6 +9,11 @@ from apps.profiles.viewsets import (
 
 urlpatterns = [
     path(
+        '',
+        ProfilesView.as_view({'get': 'list'}),
+        name='get_all_user_profiles'
+    ),
+    path(
         '<int:pk>/', UserProfileView.as_view(),
         name='update_user_profile'
     ),

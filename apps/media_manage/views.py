@@ -27,6 +27,9 @@ def serve_protected_media(request, path):
         access_token = AccessToken(token)
         user_group = access_token['group']
 
+        if user_group not in ('user', 'guest'):
+            return HttpResponseForbidden('Invalid user group or user type')
+
         # Можно дополнительно проверить пользователя
         # from django.contrib.auth import get_user_model
         # User = get_user_model()
