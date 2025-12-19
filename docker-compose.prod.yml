@@ -111,6 +111,8 @@ services:
       POSTFIX_smtp_use_tls: "yes"
       POSTFIX_smtpd_use_tls: "yes"
       POSTFIX_smtp_tls_security_level: may
+      POSTFIX_smtp_sasl_auth_enable: yes
+      POSTFIX_smtp_sasl_password_maps: hash:/etc/postfix/sasl_passwd
       POSTFIX_smtpd_tls_security_level: may
       POSTFIX_smtpd_tls_cert_file: /etc/ssl/certs/ssl-cert-snakeoil.pem
       POSTFIX_smtpd_tls_key_file: /etc/ssl/private/ssl-cert-snakeoil.key
