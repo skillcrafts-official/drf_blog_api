@@ -29,7 +29,7 @@ class GuestUser(models.Model):
         ]
 
     def __str__(self):
-        return f"Guest {self.guest_id}"
+        return f"Guest {self.guest_uuid}"
 
     @property
     def is_authenticated(self):
@@ -44,11 +44,11 @@ class GuestUser(models.Model):
     # Добавьте метод для получения pk (иногда DRF требует)
     @property
     def pk(self):
-        return self.guest_id
+        return self.pk
 
     def get_username(self):
         """Возвращает username-подобное значение"""
-        return f"guest_{self.guest_id}"
+        return f"guest_{self.guest_uuid}"
 
 
 class GuestConsent(models.Model):
@@ -119,6 +119,19 @@ class User(AbstractUser):
 
     def __str__(self):
         return str(self.primary_email)
+
+
+class UserConsent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    consent_type = models.CharField(max_length=50)  # 'basic', 'cookies', 'marketing'
+    given_at = models.DateTimeField(auto_now_add=True)
+    # ip_address = models.GenericIPAddressField()
+    # user_agent = models.TextField()
+    consent_text_hash = models.CharField(max_length=64)  # Хэш текста политики на момент согласия
+
+    # Для GDPR/РКН compliance
+    is_active = models.BooleanField(default=True)
+    withdrawn_at = models.DateTimeField(null=True, blank=True)
 
 
 class Email(models.Model):

@@ -6,12 +6,13 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
+from django.db import models
 
 from rest_framework import serializers, status
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import Token
 
-from apps.accounts.models import GuestConsent, User, GuestUser, Email
+from apps.accounts.models import GuestConsent, User, GuestUser, Email, UserConsent
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
@@ -95,15 +96,7 @@ class UserEmailSerializer(serializers.ModelSerializer):
         ]
 
 
-class GuestTokenObtainSerializer(serializers.Serializer):
-    """Сериализатор для получения гостевого токена"""
-
-    def validate(self, attrs):
-        """
-        Главный метод валидации, который вызывается при serializer.is_valid()
-        """
-        return self.create_guest_token()
-
+class BaseConsent:
     def get_current_consent_text(self):
         """Возвращает актуальный текст соглашения"""
         # Можно хранить в БД, файле или settings
@@ -125,6 +118,77 @@ class GuestTokenObtainSerializer(serializers.Serializer):
     def generate_text_hash(self, text):
         """Генерирует хэш текста соглашения"""
         return hashlib.sha256(text.encode('utf-8')).hexdigest()
+
+    def check_consent(self, ConsentInstance: models.Model, **kwargs):
+        active_consent = ConsentInstance.objects.filter(
+            is_active=True,
+            consent_type='registration',
+            **kwargs
+        ).first()
+
+        if not active_consent:
+            # Если согласия нет - создаём новое
+            consent_text = self.get_current_consent_text()
+            consent_hash = self.generate_text_hash(consent_text)
+
+            user_params = {
+                **kwargs
+            }
+
+            if kwargs.get('guest', None):
+                user_params.update({
+                    'ip_address': kwargs['guest'].ip_address,
+                    'user_agent': kwargs['guest'].user_agent
+                })
+
+            consent = ConsentInstance.objects.create(
+                consent_type='registration',
+                consent_text_hash=consent_hash,
+                **user_params
+                # is_active=True по умолчанию
+                # withdrawn_at=None по умолчанию
+            )
+
+        # Проверяем, не было ли согласие отозвано
+        if ConsentInstance.objects.filter(
+            is_active=False, consent_type='registration', **user_params
+        ).exists():
+            raise serializers.ValidationError({
+                'detail': 'Согласие на обработку данных было отозвано',
+                'code': 'consent_withdrawn'
+            })
+
+
+class GuestTokenObtainSerializer(BaseConsent, serializers.Serializer):
+    """Сериализатор для получения гостевого токена"""
+
+    def validate(self, attrs):
+        """
+        Главный метод валидации, который вызывается при serializer.is_valid()
+        """
+        return self.create_guest_token()
+
+    # def get_current_consent_text(self):
+    #     """Возвращает актуальный текст соглашения"""
+    #     # Можно хранить в БД, файле или settings
+    #     texts = {
+    #         'registration': """
+    #         Я даю согласие на обработку моих персональных данных, 
+    #         предоставляемых в качестве гостя сайта, включая сбор, 
+    #         запись, систематизацию, накопление, хранение, уточнение, 
+    #         извлечение, использование, передачу (распространение, 
+    #         предоставление, доступ), обезличивание, блокирование, 
+    #         удаление, уничтожение персональных данных.
+            
+    #         Согласие действует до момента его отзыва.
+    #         Полный текст политики: /privacy-policy
+    #         """
+    #     }
+    #     return texts.get('registration', '')
+
+    # def generate_text_hash(self, text):
+    #     """Генерирует хэш текста соглашения"""
+    #     return hashlib.sha256(text.encode('utf-8')).hexdigest()
 
     # def generate_guest_token(self, guest):
     #     """Генерация access token для гостя"""
@@ -173,35 +237,36 @@ class GuestTokenObtainSerializer(serializers.Serializer):
         # Обновляем активность
         guest.save()
 
-        active_consent = GuestConsent.objects.filter(
-            guest=guest,
-            is_active=True,
-            consent_type='registration'
-        ).first()
+        self.check_consent(GuestConsent, guest=guest)
+        # active_consent = GuestConsent.objects.filter(
+        #     guest=guest,
+        #     is_active=True,
+        #     consent_type='registration'
+        # ).first()
 
-        if not active_consent:
-            # Если согласия нет - создаём новое
-            consent_text = self.get_current_consent_text()
-            consent_hash = self.generate_text_hash(consent_text)
+        # if not active_consent:
+        #     # Если согласия нет - создаём новое
+        #     consent_text = self.get_current_consent_text()
+        #     consent_hash = self.generate_text_hash(consent_text)
 
-            guest_consent = GuestConsent.objects.create(
-                guest=guest,
-                consent_type='registration',
-                ip_address=guest.ip_address,
-                user_agent=guest.user_agent,
-                consent_text_hash=consent_hash,
-                # is_active=True по умолчанию
-                # withdrawn_at=None по умолчанию
-            )
+        #     guest_consent = GuestConsent.objects.create(
+        #         guest=guest,
+        #         consent_type='registration',
+        #         ip_address=guest.ip_address,
+        #         user_agent=guest.user_agent,
+        #         consent_text_hash=consent_hash,
+        #         # is_active=True по умолчанию
+        #         # withdrawn_at=None по умолчанию
+        #     )
 
-        # Проверяем, не было ли согласие отозвано
-        if GuestConsent.objects.filter(
-            guest=guest, is_active=False, consent_type='registration'
-        ).exists():
-            raise serializers.ValidationError({
-                'detail': 'Согласие на обработку данных было отозвано',
-                'code': 'consent_withdrawn'
-            })
+        # # Проверяем, не было ли согласие отозвано
+        # if GuestConsent.objects.filter(
+        #     guest=guest, is_active=False, consent_type='registration'
+        # ).exists():
+        #     raise serializers.ValidationError({
+        #         'detail': 'Согласие на обработку данных было отозвано',
+        #         'code': 'consent_withdrawn'
+        #     })
 
         # Генерируем JWT токен для гостя
         from rest_framework_simplejwt.tokens import RefreshToken
@@ -234,12 +299,30 @@ class GuestTokenObtainSerializer(serializers.Serializer):
         }
 
 
-class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
+class MyTokenObtainPairSerializer(BaseConsent, TokenObtainPairSerializer):
+
+    def get_current_consent_text(self):
+        """Возвращает актуальный текст соглашения"""
+        # Можно хранить в БД, файле или settings
+        texts = {
+            'registration': """
+            Я даю согласие на обработку моих персональных данных, 
+            предоставляемых в качестве гостя сайта, включая сбор, 
+            запись, систематизацию, накопление, хранение, уточнение, 
+            извлечение, использование, передачу (распространение, 
+            предоставление, доступ), обезличивание, блокирование, 
+            удаление, уничтожение персональных данных.
+            
+            Согласие действует до момента его отзыва.
+            Полный текст политики: /privacy-policy
+            """
+        }
+        return texts.get('registration', '')
 
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        
+
         # Добавляем кастомные claims
         token['user_id'] = user.pk
         token['email'] = user.primary_email if hasattr(user, 'primary_email') else user.email
@@ -251,14 +334,16 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         else:
             token['group'] = 'user'
             token['permissions'] = ['user_access']
-            
+
         return token
 
     def validate(self, attrs):
         data = super().validate(attrs)
-        
+
+        self.check_consent(UserConsent, user=self.user)
+
         refresh = self.get_token(self.user)
-        
+
         # Обновляем данные с правильными токенами
         data.update({
             'refresh': str(refresh),
@@ -268,5 +353,5 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
             'group': 'admin' if self.user.is_staff else 'user',
             'user_type': 'user'
         })
-        
+
         return data

@@ -268,7 +268,7 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     # Основные настройки
     "TITLE": "Blog API",
-    "VERSION": "mvp.2025.12.4",
+    "VERSION": "mvp.2025.12.5",
     "DESCRIPTION": 'API для блога с JWT аутентификацией (пользователи + гости)',
 
     # Включение схемы безопасности
