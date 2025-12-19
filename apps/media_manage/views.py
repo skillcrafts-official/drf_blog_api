@@ -25,13 +25,13 @@ def serve_protected_media(request, path):
         # Используем те же настройки что и в rest_framework_simplejwt
         from rest_framework_simplejwt.tokens import AccessToken
         access_token = AccessToken(token)
-        user_id = access_token['user_id']
+        user_group = access_token['group']
 
         # Можно дополнительно проверить пользователя
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        user = User.objects.get(id=user_id)
-        request.user = user  # Устанавливаем пользователя
+        # from django.contrib.auth import get_user_model
+        # User = get_user_model()
+        # user = User.objects.get(id=user_id)
+        # request.user = user  # Устанавливаем пользователя
 
     except Exception as e:
         print(f"JWT validation error: {e}")
