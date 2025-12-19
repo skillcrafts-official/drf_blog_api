@@ -421,6 +421,8 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+# CORS_EXPOSE_HEADERS = ['Set-Cookie']
+
 # CSRF только для админки и сессионной аутентификации
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
@@ -439,6 +441,9 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # или 'cache', 'file'
 SESSION_COOKIE_AGE = 1209600  # 2 недели в секундах
 SESSION_SAVE_EVERY_REQUEST = True
+
+# SESSION_COOKIE_NAME = 'sessionid_local'
+# CSRF_COOKIE_NAME = 'csrftoken_local'
 
 # Настройки Email
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

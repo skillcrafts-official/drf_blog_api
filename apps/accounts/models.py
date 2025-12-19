@@ -42,9 +42,9 @@ class GuestUser(models.Model):
         return False
 
     # Добавьте метод для получения pk (иногда DRF требует)
-    @property
-    def pk(self):
-        return self.pk
+    # @property
+    # def pk(self):
+    #     return self.pk
 
     def get_username(self):
         """Возвращает username-подобное значение"""
