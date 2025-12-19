@@ -151,7 +151,7 @@ class BaseConsent:
 
         # Проверяем, не было ли согласие отозвано
         if ConsentInstance.objects.filter(
-            is_active=False, consent_type='registration', **user_params
+            is_active=False, consent_type='registration', **kwargs
         ).exists():
             raise serializers.ValidationError({
                 'detail': 'Согласие на обработку данных было отозвано',
