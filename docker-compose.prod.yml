@@ -16,7 +16,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - backend
+      - drf_blog_api_backend
 
   web:
     # build:
@@ -63,7 +63,7 @@ services:
     #   retries: 3
     #   start_period: 40s
     networks:
-      - backend
+      - drf_blog_api_backend
     logging:
       driver: "json-file"
       options:
@@ -145,7 +145,7 @@ services:
       - "127.0.0.1:587:587"  # Submission (TLS)
       - "127.0.0.1:465:465"  # SMTPS (SSL)
     networks:
-      - backend
+      - drf_blog_api_backend
     # depends_on:
     #   - opendkim
     env_file:  # ← ДОБАВЬТЕ ЭТУ СТРОКУ
@@ -160,7 +160,7 @@ services:
     volumes:
       - ./postfix/opendkim/keys:/etc/opendkim/keys
     networks:
-      - backend
+      - drf_blog_api_backend
     ports:
       - "8891:8891"  # Для связи с Postfix
 
@@ -177,7 +177,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - backend
+      - drf_blog_api_backend
 
 volumes:
   postgres_data:
@@ -189,6 +189,11 @@ volumes:
   redis_data:
     driver: local
 
+# networks:
+#   backend:
+#     driver: bridge
+
 networks:
-  backend:
-    driver: bridge
+  drf_blog_api_backend:
+    external: true
+    name: drf_blog_api_backend
