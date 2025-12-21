@@ -184,30 +184,30 @@ class FixUserView(OpenApiViewExtension):
         return Fixed
 
 
-class FixEmailConfirmView(OpenApiViewExtension):
-    """
-    Фиксируется документация для EmailConfirmView
-    """
-    target_class = 'apps.accounts.views.EmailConfirmView'
+# class FixEmailConfirmView(OpenApiViewExtension):
+#     """
+#     Фиксируется документация для EmailConfirmView
+#     """
+#     target_class = 'apps.accounts.views.EmailConfirmView'
 
-    def view_replacement(self) -> type[ModelViewSet]:
+#     def view_replacement(self) -> type[ModelViewSet]:
 
-        @extend_schema_view(
-            update=extend_schema(
-                summary="Подтвердить пользователя",
-                description=(
-                    "Подтверждение регистрации пользователя "
-                    "через код отправленный на указанный Email  \n  \n"
-                    "**Публичный метод, доступен всем**"
-                ),
-                request=EmailConfirmSerializer
-            )
-        )
-        # pylint: disable=missing-class-docstring
-        class Fixed(self.target_class):  # type: ignore
-            pass
+#         @extend_schema_view(
+#             update=extend_schema(
+#                 summary="Подтвердить пользователя",
+#                 description=(
+#                     "Подтверждение регистрации пользователя "
+#                     "через код отправленный на указанный Email  \n  \n"
+#                     "**Публичный метод, доступен всем**"
+#                 ),
+#                 request=EmailConfirmSerializer
+#             )
+#         )
+#         # pylint: disable=missing-class-docstring
+#         class Fixed(self.target_class):  # type: ignore
+#             pass
 
-        return Fixed
+#         return Fixed
 
 
 class FixMyTokenObtainPairView(OpenApiViewExtension):

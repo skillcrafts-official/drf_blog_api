@@ -1,9 +1,17 @@
+from typing import Any
+from datetime import datetime
+
+from jsonschema import ValidationError
 from apps.accounts.authentication import UnifiedJWTAuthentication
 from django.db import IntegrityError
+from django.db.models.query import QuerySet
 from django.utils import timezone
 from django.contrib.auth.hashers import make_password
 
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from rest_framework.decorators import action
+from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
@@ -13,23 +21,64 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from apps.accounts.models import User, Email, GuestConsent
 from apps.accounts.serializers import (
     UserSerializer, UserPasswordSerializer, UserEmailSerializer,
-    MyTokenObtainPairSerializer, GuestTokenObtainSerializer
+    MyTokenObtainPairSerializer, GuestTokenObtainSerializer,
+    EmailConfirmSerializer
 )
+from apps.accounts.filters import ConfirmEmailFilters
 
 
 class UserView(ModelViewSet):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+    # filterset_class = ConfirmEmailFilters
     lookup_field = 'pk'
 
+    # @action(detail=False, methods=['post'])
+    # def confirmed_email(self, request):
+    #     """
+    #     Кастомный ендпоинт выдаёт список языков
+    #     для компонентов выбора на клиенте
+    #     """
+    #     data = request.data
+    #     confirmed_email = data.get('confirmed_email')
+    #     confirm_code = data.get('confirm_code')
 
-# class EmailConfirmView(APIView):
-#     serializer_class = EmailConfirmSerializer
+    #     return Response({'success': True})
+    # def list(self, request: Request, *args: Any, **kwargs: Any) -> Response:
+    #     print(request.data)
+    #     return super().list(request, *args, **kwargs)
 
-#     def put(self, request, *args, **kwargs):
-#         data = request.data
-#         serializer = self.serializer_class(data=data)
+
+class EmailConfirmView(APIView):
+    """Ендпоинты для подтверждения Email"""
+    serializer_class = EmailConfirmSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        """Проверка email"""
+        data = request.data
+        print(data)
+        user = User.objects.filter(
+            primary_email=data.get('primary_email', ''),
+            confirmation_code=data.get('confirmation_code', '')
+        ).first()
+
+        if user is None:
+            raise ValidationError(detail='User not found!')
+
+        # if user.generated_code_at is None:
+        #     raise ValidationError(detail='Email verification failed!')
+
+        # print(user.generated_code_at)
+        serializer = self.serializer_class(
+            instance=user, data=data, partial=True
+        )
+
+        if serializer.is_valid():
+            return Response({'verification': 'passed'}, status=200)
+
+        return Response({'verification': 'failed'}, status=200)
 
 
 class UpdateUserPasswordView(APIView):

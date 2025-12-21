@@ -1,14 +1,17 @@
 import hashlib
 from typing import Any
 import uuid
+
 import jwt
 from datetime import datetime, timedelta
 
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import Token
 
@@ -56,21 +59,33 @@ class UserSerializer(serializers.ModelSerializer):
         return email
 
 
-class EmailConfirmSerializer(serializers.Serializer):
-    new_email = serializers.EmailField(write_only=True)
-    confirm_code = serializers.CharField(write_only=True)
+class EmailConfirmSerializer(serializers.ModelSerializer):
 
-    def validate_confirm_code(self, confirm_code):
-        if confirm_code != 'TESTCODE':
-            raise serializers.ValidationError(
-                "Неверный код подтверждения"
+    class Meta:
+        model = User
+        fields = ['primary_email', 'confirmation_code']
+
+    def validate(self, attrs: Any) -> Any:
+        confirmed_email = attrs.pop('primary_email', None)
+        confirm_code = attrs.pop('confirmation_code', None)
+        if not all((
+            self.instance.primary_email == confirmed_email,
+            self.instance.confirmation_code == confirm_code,
+            (
+                datetime.now() -
+                (self.instance.generated_code_at or datetime(year=2025, month=12, day=22)) <= timedelta(minutes=30)
             )
-        return confirm_code
+        )):
+            raise ValidationError(detail='message')
 
-    def update(self, instance, validated_data):
-        instance.is_confirmed = True
-        instance.save()
-        return instance
+        self.instance.email_verified = True
+
+        if self.instance.email_verified:
+            raise ValidationError(detail='message')
+
+        self.instance.save()
+
+        return super().validate(attrs)
 
     def create(self, validated_data):
         pass

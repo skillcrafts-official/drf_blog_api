@@ -6,7 +6,7 @@ from rest_framework_simplejwt.views import (
 )
 from apps.accounts.views import (
     UserView, MyTokenObtainPairView, GuestTokenObtainView,
-    UpdateUserPasswordView, UpdateUserEmailView
+    UpdateUserPasswordView, UpdateUserEmailView, EmailConfirmView
 )
 from apps.accounts.authentication import UnifiedJWTAuthentication
 
@@ -28,6 +28,14 @@ urlpatterns = [
         'emails/', UpdateUserEmailView.as_view(),
         name='add_email'
     ),
+    path(
+        'emails/confirm/', EmailConfirmView.as_view(),
+        name='confirmed_email'
+    ),
+    # path(
+    #     'emails/confirm/', EmailConfirmView.as_view({'get': 'list'}),
+    #     name='confirmed_email'
+    # ),
     # path(
     #     'emails/confirm/', EmailConfirmView.as_view({'put': 'update'}),
     #     name='email_confirm'
