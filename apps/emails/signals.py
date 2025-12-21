@@ -23,7 +23,7 @@ def send_email_on_user_creation(sender, instance, created, **kwargs):
             # Отправляем код подтверждения
             result = send_confirmation_email(
                 email=instance.primary_email,
-                username=instance.username or instance.primary_email
+                username=instance.primary_email
             )
 
             # Сохраняем код в базе (если нужно)
