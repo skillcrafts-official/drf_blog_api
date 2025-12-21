@@ -43,10 +43,10 @@ services:
       EMAIL_HOST: postfix
       EMAIL_PORT: 25
       EMAIL_USE_TLS: "False"
-      EMAIL_HOST_USER: ${SMTP_USER}
-      EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
-      DEFAULT_FROM_EMAIL: "noreply@${DOMAIN}"
-      SERVER_EMAIL: "admin@${DOMAIN}"
+      # EMAIL_HOST_USER: ${SMTP_USER}
+      # EMAIL_HOST_PASSWORD: ${SMTP_PASSWORD}
+      # DEFAULT_FROM_EMAIL: "noreply@${DOMAIN}"
+      # SERVER_EMAIL: "admin@${DOMAIN}"
     env_file:
       - .env  # или .env.production
     depends_on:
