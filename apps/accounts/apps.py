@@ -10,5 +10,7 @@ class AccountsConfig(AppConfig):
         try:
             # pylint: disable=import-outside-toplevel,unused-import
             from apps.accounts import spectaculars  # noqa: F401
+            from apps.accounts import signals       # noqa: F401
+            # from apps.accounts import handlers      # noqa: F401
         except ImportError:
             pass

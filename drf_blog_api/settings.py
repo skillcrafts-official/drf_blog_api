@@ -89,10 +89,13 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_cleanup.apps.CleanupConfig',
+    # drf apps
     'apps.accounts', 'apps.profiles', 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
     'apps.resume',
-    'django_cleanup.apps.CleanupConfig',
+    # django apps
+    'apps.emails'
 ]
 
 MIDDLEWARE = [
@@ -111,10 +114,13 @@ ROOT_URLCONF = 'drf_blog_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',

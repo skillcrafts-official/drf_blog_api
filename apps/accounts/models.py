@@ -76,6 +76,9 @@ class User(AbstractUser):
     # date_joined = None
     username = None
     primary_email = models.EmailField(unique=True)
+    confirmation_code = models.CharField(max_length=4, default='0000', blank=True)
+
+    email_verified = models.BooleanField(default=False)
 
     guest_origin = models.ForeignKey(
         GuestUser,
