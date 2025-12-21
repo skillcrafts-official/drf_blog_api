@@ -82,11 +82,10 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(str(e))
 
-        self.instance.email_verified = True
-
         if self.instance.email_verified:
             raise ValidationError(detail='message')
 
+        self.instance.email_verified = True
         self.instance.save()
 
         return super().validate(attrs)
