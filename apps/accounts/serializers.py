@@ -75,6 +75,9 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
                 self.instance.confirmation_code == confirm_code,
                 (timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=60)
             )):
+                print(self.instance.primary_email == confirmed_email)
+                print(self.instance.confirmation_code == confirm_code)
+                print((timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=60))
                 raise ValidationError(detail='message')
         except Exception as e:
             print(str(e))
