@@ -24,7 +24,6 @@ from apps.accounts.serializers import (
     MyTokenObtainPairSerializer, GuestTokenObtainSerializer,
     EmailConfirmSerializer
 )
-from apps.accounts.filters import ConfirmEmailFilters
 
 
 class UserView(ModelViewSet):
