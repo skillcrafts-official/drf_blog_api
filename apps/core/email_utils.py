@@ -41,10 +41,10 @@ def send_confirmation_email(email: str, username: str = None) -> dict:
 
         # Рендерим HTML и текстовую версии
         html_content = render_to_string(
-            '../emails/templates/emails/confirmation_email.html', context
+            'emails/confirmation_email.html', context
         )
         text_content = render_to_string(
-            '../emails/templates/emails/confirmation_email.txt', context
+            'emails/confirmation_email.txt', context
         )
 
         # Создаем email сообщение

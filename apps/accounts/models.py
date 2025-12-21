@@ -78,6 +78,8 @@ class User(AbstractUser):
     primary_email = models.EmailField(unique=True)
     confirmation_code = models.CharField(max_length=4, default='0000', blank=True)
 
+    generated_code_at = models.DateTimeField(null=True, blank=True)
+
     email_verified = models.BooleanField(default=False)
 
     guest_origin = models.ForeignKey(
