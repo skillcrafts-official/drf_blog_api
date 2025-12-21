@@ -30,7 +30,7 @@ def send_email_on_user_creation(sender, instance, created, **kwargs):
             if result['success']:
                 # Здесь можно сохранить код в модель пользователя
                 instance.confirmation_code = result['code']
-                instance.generated_code_at = str(timezone.now())
+                instance.generated_code_at = timezone.now()
                 instance.save(update_fields=['confirmation_code'])
                 pass
         print(f'{result = }')
