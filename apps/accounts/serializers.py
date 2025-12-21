@@ -68,13 +68,12 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
     def validate(self, attrs: Any) -> Any:
         confirmed_email = attrs.pop('primary_email', None)
         confirm_code = attrs.pop('confirmation_code', None)
-        print(type(self.instance.generated_code_at))
+        print(self.instance.generated_code_at)
         if not all((
             self.instance.primary_email == confirmed_email,
             self.instance.confirmation_code == confirm_code,
             (
-                datetime.now() -
-                (self.instance.generated_code_at or datetime(year=2025, month=12, day=22)) <= timedelta(minutes=30)
+                datetime.now() - self.instance.generated_code_at <= timedelta(minutes=30)
             )
         )):
             raise ValidationError(detail='message')
