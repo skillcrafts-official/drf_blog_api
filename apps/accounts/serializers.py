@@ -73,7 +73,7 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
             if not all((
                 self.instance.primary_email == confirmed_email,
                 self.instance.confirmation_code == confirm_code,
-                (datetime.now() - datetime(**self.instance.generated_code_at)) <= timedelta(minutes=60)
+                (timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=60)
             )):
                 raise ValidationError(detail='message')
         except Exception as e:
