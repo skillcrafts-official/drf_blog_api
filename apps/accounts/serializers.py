@@ -79,15 +79,12 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(str(e))
 
-        print(datetime.now() - self.instance.generated_code_at)
         self.instance.email_verified = True
 
         if self.instance.email_verified:
             raise ValidationError(detail='message')
-        print(datetime.now() - self.instance.generated_code_at <= timedelta(minutes=30))
 
         self.instance.save()
-        print(self.instance.generated_code_at)
 
         return super().validate(attrs)
 
