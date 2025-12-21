@@ -68,6 +68,7 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
     def validate(self, attrs: Any) -> Any:
         confirmed_email = attrs.pop('primary_email', None)
         confirm_code = attrs.pop('confirmation_code', None)
+        print(type(self.instance.generated_code_at))
         if not all((
             self.instance.primary_email == confirmed_email,
             self.instance.confirmation_code == confirm_code,

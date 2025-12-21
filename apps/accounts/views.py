@@ -57,7 +57,7 @@ class EmailConfirmView(APIView):
     def post(self, request, *args, **kwargs):
         """Проверка email"""
         data = request.data
-        print(data)
+
         user = User.objects.filter(
             primary_email=data.get('primary_email', ''),
             confirmation_code=data.get('confirmation_code', '')
