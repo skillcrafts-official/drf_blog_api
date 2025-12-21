@@ -15,10 +15,8 @@ def send_email_on_user_creation(sender, instance, created, **kwargs):
     """
     Отправляет письмо с кодом подтверждения при создании пользователя
     """
-    print('=== Send Code EMAIL ===')
     if created and instance.primary_email:
         # Проверяем, что email подтверждён (если у вас есть такое поле)
-        print(f'{getattr(instance, 'email_verified', False) = }')
         if not getattr(instance, 'email_verified', False):
             # Отправляем код подтверждения
             result = send_confirmation_email(
@@ -31,9 +29,7 @@ def send_email_on_user_creation(sender, instance, created, **kwargs):
                 # Здесь можно сохранить код в модель пользователя
                 instance.confirmation_code = result['code']
                 instance.generated_code_at = timezone.now()
-                instance.save(update_fields=['confirmation_code'])
-                pass
-        print(f'{result = }')
+                instance.save(update_fields=['confirmation_code', 'generated_code_at'])
 
 
 # @receiver(post_save, sender=User)

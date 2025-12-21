@@ -6,10 +6,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-import logging
-
-
-logger = logging.getLogger(__name__)  # 'apps.core.email_utils'
 
 
 def generate_confirmation_code() -> str:
@@ -30,7 +26,6 @@ def send_confirmation_email(email: str, username: str = None) -> dict:
     Returns:
         dict: {'success': bool, 'code': str, 'message': str}
     """
-    logger.info(f"Начало отправки письма для {email}")
     try:
         # Генерируем код
         confirmation_code = generate_confirmation_code()
@@ -69,7 +64,6 @@ def send_confirmation_email(email: str, username: str = None) -> dict:
         # Отправляем
         email_msg.send(fail_silently=False)
 
-        logger.info(f"Письмо успешно отправлено на {email}, код: {confirmation_code}")
         return {
             'success': True,
             'code': confirmation_code,
@@ -77,7 +71,6 @@ def send_confirmation_email(email: str, username: str = None) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Ошибка отправки письма на {email}: {str(e)}", exc_info=True)
         return {
             'success': False,
             'code': None,
