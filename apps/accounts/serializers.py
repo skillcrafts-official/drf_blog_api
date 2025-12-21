@@ -68,16 +68,13 @@ class EmailConfirmSerializer(serializers.ModelSerializer):
     def validate(self, attrs: Any) -> Any:
         confirmed_email = attrs.pop('primary_email', None)
         confirm_code = attrs.pop('confirmation_code', None)
-        print(self.instance.generated_code_at)
+
         try:
             if not all((
                 self.instance.primary_email == confirmed_email,
                 self.instance.confirmation_code == confirm_code,
-                (timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=60)
+                (timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=15)
             )):
-                print(self.instance.primary_email == confirmed_email)
-                print(self.instance.confirmation_code == confirm_code)
-                print((timezone.now() - self.instance.generated_code_at) <= timedelta(minutes=60))
                 raise ValidationError(detail='message')
         except Exception as e:
             print(str(e))
