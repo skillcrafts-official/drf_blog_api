@@ -12,6 +12,7 @@ from apps.accounts.models import User
 PRIVACIES = [
     ('all', 'видно всем'),
     ('not_all', 'всем, кроме...'),
+    ('not_nobody', 'никому, кроме'),
     ('nobody', 'никому')
 ]
 
@@ -82,10 +83,13 @@ class ProfilePrivacySettings(models.Model):
         Profile,
         on_delete=models.CASCADE,
         primary_key=True,
-        related_name='profile'
+        related_name='profile_privacies'
     )
     blacklist = models.ManyToManyField(
-        User, related_name='blacklist', blank=True
+        User, related_name='profile_blacklist', blank=True
+    )
+    whitelist = models.ManyToManyField(
+        User, related_name='profile_whitelist', blank=True
     )
 
     class Meta:
@@ -100,17 +104,59 @@ class ProfilePrivacySettings(models.Model):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
-    @classmethod
-    def get_profile(cls, user_id):
-        """Получаем профиль по user_id"""
-        try:
-            profile = cls.objects.get(user_id=user_id)
-        except cls.DoesNotExist:
-            profile = None
+    # @classmethod
+    # def get_profile(cls, user_id):
+    #     """Получаем профиль по user_id"""
+    #     try:
+    #         profile = cls.objects.get(user_id=user_id)
+    #     except cls.DoesNotExist:
+    #         profile = None
 
-        if profile is None:
-            raise NotFound(
-                detail="Profile not found"
-            )
+    #     if profile is None:
+    #         raise NotFound(
+    #             detail="Profile not found"
+    #         )
 
-        return profile
+    #     return profile
+
+
+class TaskPrivacySettings(models.Model):
+    """
+    Модель для настройки доступа к информации о задачах пользователя
+    """
+    profile = models.OneToOneField(
+        Profile,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name='task_privacies'
+    )
+    blacklist = models.ManyToManyField(
+        User, related_name='task_blacklist', blank=True
+    )
+    whitelist = models.ManyToManyField(
+        User, related_name='task_whitelist', blank=True
+    )
+
+    class Meta:
+        verbose_name = 'Доступ к задаче пользователя'
+        verbose_name_plural = 'Доступ к задачам пользователей'
+
+    def __iter__(self):
+        for field in self._meta.fields:  # pylint: disable=no-member
+            if not field.auto_created:
+                yield field.name, getattr(self, field.name)
+
+    # @classmethod
+    # def get_profile(cls, user_id):
+    #     """Получаем профиль по user_id"""
+    #     try:
+    #         profile = cls.objects.get(user_id=user_id)
+    #     except cls.DoesNotExist:
+    #         profile = None
+
+    #     if profile is None:
+    #         raise NotFound(
+    #             detail="Profile not found"
+    #         )
+
+    #     return profile

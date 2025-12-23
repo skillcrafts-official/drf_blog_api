@@ -1,4 +1,3 @@
-from os import name
 from django.db import transaction
 
 from apps.profiles.models import Profile, WorkFormat

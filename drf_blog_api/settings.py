@@ -93,7 +93,7 @@ INSTALLED_APPS = [
     # drf apps
     'apps.accounts', 'apps.profiles', 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
-    'apps.resume',
+    'apps.resume', 'apps.my_workflows',
     # django apps
     'apps.emails'
 ]
@@ -274,8 +274,11 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     # Основные настройки
     "TITLE": "Blog API",
-    "VERSION": "mvp.2025.12.5",
-    "DESCRIPTION": 'API для блога с JWT аутентификацией (пользователи + гости)',
+    "VERSION": "mvp.2025.12.6",
+    "DESCRIPTION": (
+        'API для блога с JWT аутентификацией (пользователи + гости)  \n'
+        '22.12.2025 - Добавлено приложение для тайм-менеджмента'
+    ),
 
     # Включение схемы безопасности
     "SERVE_INCLUDE_SCHEMA": True,  # Оставьте True для отладки
