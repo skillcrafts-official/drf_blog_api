@@ -18,7 +18,7 @@ class Task(models.Model):
     todo = models.CharField(null=True, blank=True)  # Краткое название/суть
     description = models.TextField(blank=True)       # Полное описание, контекст
     privacy = models.CharField(
-        choices=PRIVACIES, max_length=10, default='nobody'
+        choices=PRIVACIES, max_length=20, default='nobody'
     )
 
     # --- Метаданные ПРОЦЕССА (ключ для KPI) ---
