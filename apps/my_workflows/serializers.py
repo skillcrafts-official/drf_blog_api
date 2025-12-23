@@ -9,8 +9,9 @@ class TaskSerializer(serializers.ModelSerializer):
         model = Task
         fields = [
             'id', 'todo', 'description', 'status',
-            'priority', 'privacy', 'profile'
+            'priority', 'date_created', 'privacy', 'profile'
         ]
+        read_only_fields = ['date_created']
 
 
 class CycleTimeSerializer(serializers.ModelSerializer):
