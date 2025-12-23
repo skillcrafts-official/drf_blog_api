@@ -8,7 +8,7 @@ from apps.profiles.models import Profile
 PRIVACIES = [
     ('all', 'видно всем'),
     ('not_all', 'всем, кроме...'),
-    ('not_nobody', 'никому, кроме'),
+    ('no_one_except', 'никому, кроме'),
     ('nobody', 'никому')
 ]
 
