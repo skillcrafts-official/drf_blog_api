@@ -142,3 +142,31 @@ class CycleTime(models.Model):
 
     def __str__(self):
         return f"{self.task.id} | {self.get_phase_display()}: {self.duration_hours:.1f} ч"
+
+
+class AcceptanceCriteria(models.Model):
+    """
+    Модель описывающая критерии приёмки задачи.
+    Каждый критерий является неотъемлемой частью задачи.
+    """
+    STATUS_CHOICES = [
+        ('', '')
+    ]
+    criteria = models.TextField(null=True, blank=True)
+
+    is_done = models.BooleanField(default=False, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='acceptance_criterias'
+    )
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"{self.task.id} | {self.status}"

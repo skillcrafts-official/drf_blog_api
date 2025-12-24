@@ -106,3 +106,44 @@ class FixCycleTimeViewSet(OpenApiViewExtension):
             pass
 
         return Fixed
+
+
+class FixAcceptanceCriteriaViewSet(OpenApiViewExtension):
+    """
+    Расширяется документация для AcceptanceCriteriaViewSet
+    """
+    target_class = 'apps.my_workflows.viewsets.AcceptanceCriteriaViewSet'
+
+    def view_replacement(self) -> type[ModelViewSet]:
+        @extend_schema_view(
+            list=extend_schema(
+                summary="Получить критерии по задаче",
+                description=(
+                    "Запрос возвращает упорядоченный по возрастанию даты "
+                    "список критериев готовности задачи."
+                )
+            ),
+            create=extend_schema(
+                summary="Добавить критерий к задаче",
+                description=(
+                    "Запрос создаёт новый критерий."
+                )
+            ),
+            partial_update=extend_schema(
+                summary="Обновить критерий",
+                description=(
+                    "Запрос обновляет критерий, либо меняя "
+                    "смысл, либо состояние."
+                )
+            ),
+            destroy=extend_schema(
+                summary="Удалить критерий",
+                description=(
+                    "Запрос безвозвратно удаляет критерий из БД."
+                )
+            )
+        )
+        class Fixed(self.target_class):  # type: ignore
+            pass
+
+        return Fixed
