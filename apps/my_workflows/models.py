@@ -50,6 +50,7 @@ class Task(models.Model):
 
     # --- Временные метки (ОСНОВА для Cycle Time) ---
     date_created = models.DateTimeField(auto_now_add=True)  # Создание запроса
+    date_updated = models.DateTimeField(auto_now=True, null=True, blank=True)  # Создание запроса
     date_ready = models.DateTimeField(null=True, blank=True)  # Попало в "Готово к работе"
     date_started = models.DateTimeField(null=True, blank=True)  # Фактический старт работы
     date_finished = models.DateTimeField(null=True, blank=True)  # Фактическое завершение работы
@@ -89,7 +90,7 @@ class Task(models.Model):
     )  # Для точности оценок
 
     class Meta:
-        ordering = ['-priority', 'date_created']
+        ordering = ['-priority', '-date_updated', '-date_created']
 
     def __str__(self):
         return f"{self.pk}: {self.todo} ({self.get_status_display()})"
