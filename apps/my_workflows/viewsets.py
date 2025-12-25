@@ -1,4 +1,5 @@
 from math import radians
+from typing import Sequence
 from django.db.models.query import QuerySet
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -18,62 +19,11 @@ from apps.my_workflows.filters import TaskFilter
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
-    # def retrieve(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     user_id = kwargs.get('user_id', None)
-    #     profile_id = kwargs.get('profile', None)
-    #     if profile_id is None:
-    #         profile_id = request.data.get('profile', None)
-    #     if user.pk != (user_id if user_id else profile_id):
-    #         raise PermissionDenied()
-    #     return super().retrieve(request, *args, **kwargs)
-
-    # def create(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     user_id = kwargs.get('user_id', None)
-    #     profile_id = kwargs.get('profile', None)
-    #     if profile_id is None:
-    #         profile_id = request.data.get('profile', None)
-    #     if user.pk != (user_id if user_id else profile_id):
-    #         print('im here!')
-    #         raise PermissionDenied()
-    #     return super().create(request, *args, **kwargs)
-
-    # def update(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     user_id = kwargs.get('user_id', None)
-    #     profile_id = kwargs.get('profile', None)
-    #     if profile_id is None:
-    #         profile_id = request.data.get('profile', None)
-    #     if user.pk != (user_id if user_id else profile_id):
-    #         raise PermissionDenied()
-    #     return super().update(request, *args, **kwargs)
-
-    # def partial_update(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     user_id = kwargs.get('user_id', None)
-    #     profile_id = kwargs.get('profile', None)
-    #     if profile_id is None:
-    #         profile_id = request.data.get('profile', None)
-    #     if user.pk != (user_id if user_id else profile_id):
-    #         raise PermissionDenied()
-    #     return super().partial_update(request, *args, **kwargs)
-
-    # def destroy(self, request, *args, **kwargs) -> Response:
-    #     user = request.user
-    #     user_id = kwargs.get('user_id', None)
-    #     profile_id = kwargs.get('profile', None)
-    #     if profile_id is None:
-    #         profile_id = request.data.get('profile', None)
-    #     if user.pk != (user_id if user_id else profile_id):
-    #         raise PermissionDenied()
-    #     return super().destroy(request, *args, **kwargs)
-
 
 class TaskViewSet(BaseModelViewSet):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    # filterset_class = TaskFilter
+    filterset_class = TaskFilter
 
     def get_object(self):
         task = Task.objects.filter(
@@ -82,6 +32,10 @@ class TaskViewSet(BaseModelViewSet):
         if task is None:
             raise NotFound(detail='Task not found!')
         return task
+
+    def get_queryset(self):
+        queryset = Task.objects.filter(profile__user=self.request.user)
+        return queryset
 
     def destroy(self, request, *args, **kwargs) -> Response:
         user = request.user

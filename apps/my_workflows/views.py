@@ -8,11 +8,12 @@ from apps.privacy_settings.models import ProfilePrivacySettings
 from apps.my_workflows.models import Task, CycleTime
 from apps.my_workflows.serializers import TaskSerializer, CycleTimeSerializer
 
-# from apps.accounts.permissions import AllowGuests
+from apps.my_workflows.filters import TaskFilter
 
 
 class TaskAPIView(views.APIView):
     serializer_class = TaskSerializer
+    filterset_class = TaskFilter
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):

@@ -10,7 +10,8 @@ from apps.my_workflows.viewsets import (
 urlpatterns = [
     path(
         'tasks/',
-        TaskAPIView.as_view(),
+        TaskViewSet.as_view({'get': 'list'}),
+        # TaskAPIView.as_view(),
         name='get_all_tasks_or_create_once'
     ),
     path(
