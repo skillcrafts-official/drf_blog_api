@@ -171,3 +171,22 @@ class AcceptanceCriteria(models.Model):
 
     def __str__(self):
         return f"{self.task.id} | {self.status}"
+
+
+class TimeEntry(models.Model):
+    """Модель для учета списанного времени"""
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name='time_entries'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        # related_name='time_entries'
+    )
+
+    # Основное поле — сколько времени списано
+    hours_spent = models.SmallIntegerField(default=1)  # или FloatField
+
+    created_at = models.DateTimeField(auto_now_add=True)

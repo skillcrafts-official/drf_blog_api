@@ -9,9 +9,9 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
-from apps.my_workflows.models import AcceptanceCriteria, Task, CycleTime
+from apps.my_workflows.models import AcceptanceCriteria, Task, CycleTime, TimeEntry
 from apps.my_workflows.serializers import (
-    TaskSerializer, CycleTimeSerializer, AcceptanceCriteriaSerializer
+    TaskSerializer, CycleTimeSerializer, AcceptanceCriteriaSerializer, TimeEntrySerializer
 )
 from apps.my_workflows.filters import TaskFilter
 
@@ -121,3 +121,12 @@ class AcceptanceCriteriaViewSet(BaseModelViewSet):
     def create(self, request, *args, **kwargs) -> Response:
 
         return super().create(request, *args, **kwargs)
+
+
+class TimeEntryViewSet(BaseModelViewSet):
+    queryset = TimeEntry.objects.all()
+    serializer_class = TimeEntrySerializer
+
+    def get_queryset(self):
+        queryset = TimeEntry.objects.filter(task=self.kwargs.get('task_id'))
+        return queryset

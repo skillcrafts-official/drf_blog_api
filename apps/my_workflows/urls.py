@@ -3,7 +3,7 @@ from django.urls import path
 
 from apps.my_workflows.views import TaskAPIView
 from apps.my_workflows.viewsets import (
-    TaskViewSet, CycleTimeViewSet, AcceptanceCriteriaViewSet
+    TaskViewSet, CycleTimeViewSet, AcceptanceCriteriaViewSet, TimeEntryViewSet
 )
 
 
@@ -33,5 +33,10 @@ urlpatterns = [
         'tasks/<int:task_id>/acceptance-criterias/<int:criteria_id>/',
         AcceptanceCriteriaViewSet.as_view({'patch': 'partial_update', 'delete': 'destroy'}),
         name='criterias_update'
+    ),
+    path(
+        'tasks/<int:task_id>/hours-spents/',
+        TimeEntryViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='time_entries_update'
     ),
 ]
