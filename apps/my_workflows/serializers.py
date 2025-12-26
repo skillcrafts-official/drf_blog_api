@@ -1,3 +1,4 @@
+from email.policy import default
 from django.db.models import Sum
 
 from rest_framework import serializers
@@ -34,7 +35,7 @@ class TimeEntrySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        print(instance.__dict__)
+        # print(instance.__dict__)
         representation.update(
             **TimeEntry.objects
             .filter(task=instance.task)
@@ -47,14 +48,24 @@ class TaskSerializer(serializers.ModelSerializer):
     criterias = AcceptanceCriteriaSerializer(
         source='acceptance_criterias', many=True, read_only=True
     )
-    hours_spents = TimeEntrySerializer(
+    all_spents = TimeEntrySerializer(
         source='time_entries', many=True, read_only=True
     )
 
     class Meta:
         model = Task
         fields = [
-            'id', 'todo', 'description', 'criterias', 'hours_spents', 'status',
+            'id', 'todo', 'description', 'criterias', 'all_spents', 'status',
             'priority', 'date_created', 'date_updated', 'privacy', 'profile'
         ]
         read_only_fields = ['date_created']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # print(instance.__dict__)
+        representation.update(
+            **TimeEntry.objects
+            .filter(task_id=instance.id)
+            .aggregate(all_spents=Sum('hours_spent'))
+        )
+        return representation
