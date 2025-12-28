@@ -8,6 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
 
 from django.conf import settings
+from django.utils import timezone
 
 
 class CustomAccessToken(AccessToken):
@@ -60,7 +61,7 @@ class CustomAccessToken(AccessToken):
             lifetime = settings.SIMPLE_JWT.get('ACCESS_TOKEN_LIFETIME', timedelta(minutes=5))
 
         if from_time is None:
-            from_time = datetime.utcnow()
+            from_time = timezone.now()
 
         self.payload['exp'] = int((from_time + lifetime).timestamp())
         self.payload['iat'] = int(from_time.timestamp())

@@ -367,6 +367,7 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,
 
+    'AUTH_TOKEN_CLASSES': ('apps.accounts.tokens.CustomAccessToken',),
     'TOKEN_CLASSES': {
         'access': 'apps.accounts.tokens.CustomAccessToken',
         'refresh': 'apps.accounts.tokens.CustomRefreshToken',  # Укажите правильный путь
