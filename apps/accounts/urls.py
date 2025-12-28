@@ -5,7 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView, TokenRefreshView, TokenVerifyView
 )
 from apps.accounts.views import (
-    UserView, MyTokenObtainPairView, GuestTokenObtainView,
+    UserView, MyTokenObtainPairView, MyTokenRefreshView, GuestTokenObtainView,
     UpdateUserPasswordView, UpdateUserEmailView, EmailConfirmView
 )
 from apps.accounts.authentication import UnifiedJWTAuthentication
@@ -45,7 +45,7 @@ urlpatterns = [
         name='token_obtain_pair'
     ),
     path(
-        'auth/token/refresh/', TokenRefreshView.as_view(),
+        'auth/token/refresh/', MyTokenRefreshView.as_view(),
         name='token_refresh'
     ),
     path(

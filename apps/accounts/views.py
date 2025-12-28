@@ -16,8 +16,10 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework_simplejwt.views import TokenObtainPairView
 
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView, TokenRefreshView, TokenVerifyView
+)
 from apps.accounts.models import User, Email, GuestConsent
 from apps.accounts.serializers import (
     UserSerializer, UserPasswordSerializer, UserEmailSerializer,
@@ -143,6 +145,10 @@ class UpdateUserEmailView(APIView):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    permission_classes = [AllowAny]
+
+
+class MyTokenRefreshView(TokenRefreshView):
     permission_classes = [AllowAny]
 
 
