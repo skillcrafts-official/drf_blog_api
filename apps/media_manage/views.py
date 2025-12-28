@@ -23,8 +23,8 @@ def serve_protected_media(request, path):
     # 2. Валидируем JWT (используем те же настройки что и в DRF)
     try:
         # Используем те же настройки что и в rest_framework_simplejwt
-        from rest_framework_simplejwt.tokens import AccessToken
-        access_token = AccessToken(token)
+        from apps.accounts.tokens import CustomAccessToken
+        access_token = CustomAccessToken(token)
         user_group = access_token['group']
 
         if user_group not in ('user', 'guest'):
