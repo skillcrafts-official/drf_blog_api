@@ -23,8 +23,11 @@ from rest_framework_simplejwt.views import (
 from apps.accounts.models import User, Email, GuestConsent
 from apps.accounts.serializers import (
     UserSerializer, UserPasswordSerializer, UserEmailSerializer,
-    MyTokenObtainPairSerializer, GuestTokenObtainSerializer,
-    EmailConfirmSerializer
+    EmailConfirmSerializer,
+    MyTokenObtainPairSerializer,
+    GuestTokenObtainSerializer,
+    MyTokenRefreshSerializer,
+    MyTokenVerifySerializer
 )
 
 
@@ -144,12 +147,51 @@ class UpdateUserEmailView(APIView):
 
 
 class MyTokenObtainPairView(TokenObtainPairView):
+    """
+    Кастомное представление для получения токенов.
+    """
     serializer_class = MyTokenObtainPairSerializer
     permission_classes = [AllowAny]
 
 
 class MyTokenRefreshView(TokenRefreshView):
+    """
+    Кастомное представление для обновления access токена.
+    """
+    serializer_class = MyTokenRefreshSerializer
     permission_classes = [AllowAny]
+
+
+class MyTokenVerifyView(TokenVerifyView):
+    """
+    Кастомное представление для верификации токенов.
+    """
+    serializer_class = MyTokenVerifySerializer
+    permission_classes = [AllowAny]
+
+
+# class MyTokenRefreshView(TokenRefreshView):
+#     """
+#     Кастомное представление для обновления токена.
+#     """
+#     serializer_class = MyTokenRefreshSerializer
+#     permission_classes = [AllowAny]
+
+#     def post(self, request, *args, **kwargs):
+#         serializer = self.get_serializer(data=request.data)
+
+#         try:
+#             serializer.is_valid(raise_exception=True)
+#         except Exception as e:
+#             return Response(
+#                 {
+#                     'detail': 'Token is invalid or expired',
+#                     'code': 'token_not_valid'
+#                 },
+#                 status=status.HTTP_401_UNAUTHORIZED
+#             )
+
+#         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
 
 class GuestTokenObtainView(APIView):

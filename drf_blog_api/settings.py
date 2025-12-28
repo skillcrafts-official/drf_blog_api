@@ -361,15 +361,22 @@ SPECTACULAR_SETTINGS = {
 
 # Упрощенные настройки JWT
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,
+
+    'TOKEN_CLASSES': {
+        'access': 'apps.accounts.tokens.CustomAccessToken',
+        'refresh': 'apps.accounts.tokens.CustomRefreshToken',  # Укажите правильный путь
+    },
 
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
+    'AUIENCE': None,
+    'ISSUER': None,
 
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
@@ -377,12 +384,20 @@ SIMPLE_JWT = {
     # Важно для UUID
     'USER_ID_FIELD': 'id',  # Теперь это UUIDField
     'USER_ID_CLAIM': 'user_id',
+    'USER_TYPE_CLAIM': 'type',
 
     # Для поддержки разных типов пользователей
     'TOKEN_TYPE_CLAIM': 'type',
 
     # Время жизни для гостей
     'GUEST_TOKEN_LIFETIME': timedelta(days=30),
+
+    'TOKEN_OBTAIN_SERIALIZER':
+        'apps.accounts.serializers.MyTokenObtainPairSerializer',
+    'TOKEN_REFRESH_SERIALIZER':
+        'apps.accounts.serializers.MyTokenRefreshSerializer',
+    'TOKEN_VERIFY_SERIALIZER':
+        'apps.accounts.serializers.MyTokenVerifySerializer',
 }
 
 # SIMPLE_JWT = {

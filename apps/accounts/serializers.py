@@ -5,6 +5,7 @@ import uuid
 import jwt
 from datetime import datetime, timedelta
 
+from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from django.db import models
@@ -12,10 +13,15 @@ from django.utils import timezone
 
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from rest_framework_simplejwt.tokens import Token
+
+from rest_framework_simplejwt.serializers import (
+    TokenObtainPairSerializer, TokenRefreshSerializer, TokenVerifySerializer
+)
+# from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 from apps.accounts.models import GuestConsent, User, GuestUser, Email, UserConsent
+from apps.accounts.tokens import CustomRefreshToken, CustomAccessToken
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
@@ -183,50 +189,6 @@ class GuestTokenObtainSerializer(BaseConsent, serializers.Serializer):
         """
         return self.create_guest_token()
 
-    # def get_current_consent_text(self):
-    #     """Возвращает актуальный текст соглашения"""
-    #     # Можно хранить в БД, файле или settings
-    #     texts = {
-    #         'registration': """
-    #         Я даю согласие на обработку моих персональных данных, 
-    #         предоставляемых в качестве гостя сайта, включая сбор, 
-    #         запись, систематизацию, накопление, хранение, уточнение, 
-    #         извлечение, использование, передачу (распространение, 
-    #         предоставление, доступ), обезличивание, блокирование, 
-    #         удаление, уничтожение персональных данных.
-            
-    #         Согласие действует до момента его отзыва.
-    #         Полный текст политики: /privacy-policy
-    #         """
-    #     }
-    #     return texts.get('registration', '')
-
-    # def generate_text_hash(self, text):
-    #     """Генерирует хэш текста соглашения"""
-    #     return hashlib.sha256(text.encode('utf-8')).hexdigest()
-
-    # def generate_guest_token(self, guest):
-    #     """Генерация access token для гостя"""
-    #     from rest_framework_simplejwt.tokens import AccessToken
-
-    #     token = AccessToken()
-    #     token['group'] = 'guest'
-    #     token['guest_id'] = str(guest.guest_id)
-    #     token['type'] = 'guest'
-    #     token['permissions'] = ['guest_access']  # Ограниченные права
-
-    #     return token
-
-    # def generate_guest_refresh_token(self, guest):
-    #     """Генерация refresh token для гостя"""
-    #     from rest_framework_simplejwt.tokens import RefreshToken
-
-    #     refresh = RefreshToken()
-    #     refresh['type'] = 'guest'
-    #     refresh['guest_id'] = str(guest.guest_id)
-
-    #     return refresh
-
     def create_guest_token(self):
         """Генерация гостевого токена"""
         request = self.context.get('request')
@@ -315,58 +277,169 @@ class GuestTokenObtainSerializer(BaseConsent, serializers.Serializer):
 
 
 class MyTokenObtainPairSerializer(BaseConsent, TokenObtainPairSerializer):
-
-    def get_current_consent_text(self):
-        """Возвращает актуальный текст соглашения"""
-        # Можно хранить в БД, файле или settings
-        texts = {
-            'registration': """
-            Я даю согласие на обработку моих персональных данных, 
-            предоставляемых в качестве гостя сайта, включая сбор, 
-            запись, систематизацию, накопление, хранение, уточнение, 
-            извлечение, использование, передачу (распространение, 
-            предоставление, доступ), обезличивание, блокирование, 
-            удаление, уничтожение персональных данных.
-            
-            Согласие действует до момента его отзыва.
-            Полный текст политики: /privacy-policy
-            """
-        }
-        return texts.get('registration', '')
-
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-
-        # Добавляем кастомные claims
-        token['user_id'] = user.pk
-        token['email'] = user.primary_email if hasattr(user, 'primary_email') else user.email
-        token['type'] = 'user'  # Тип токена
-
-        if user.is_staff:
-            token['group'] = 'admin'
-            token['permissions'] = ['full_access']
-        else:
-            token['group'] = 'user'
-            token['permissions'] = ['user_access']
-
-        return token
+    """
+    Кастомный сериализатор для получения токенов.
+    Использует наши кастомные токены.
+    """
 
     def validate(self, attrs):
-        data = super().validate(attrs)
+        # Аутентификация пользователя
+        authenticate_kwargs = {
+            self.username_field: attrs[self.username_field],
+            'password': attrs['password'],
+        }
 
-        self.check_consent(UserConsent, user=self.user)
+        try:
+            authenticate_kwargs['request'] = self.context['request']
+        except KeyError:
+            pass
 
-        refresh = self.get_token(self.user)
+        self.user = authenticate(**authenticate_kwargs)
 
-        # Обновляем данные с правильными токенами
-        data.update({
+        if not self.user:
+            raise serializers.ValidationError(
+                'Неверные учетные данные',
+                code='authorization'
+            )
+
+        if not self.user.is_active:
+            raise serializers.ValidationError(
+                'Пользователь неактивен',
+                code='authorization'
+            )
+
+        # Проверяем согласие (ваш существующий код)
+        try:
+            self.check_consent(UserConsent, user=self.user)
+        except Exception as e:
+            raise serializers.ValidationError(str(e))
+
+        # Создаем кастомные токены
+        refresh = CustomRefreshToken.for_user(self.user)
+
+        data = {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
             'user_id': self.user.pk,
             'email': self.user.primary_email if hasattr(self.user, 'primary_email') else self.user.email,
             'group': 'admin' if self.user.is_staff else 'user',
-            'user_type': 'user'
-        })
+        }
 
         return data
+
+    @classmethod
+    def get_token(cls, user):
+        """
+        Переопределяем для совместимости с родительским классом.
+        """
+        return CustomRefreshToken.for_user(user)
+
+
+class MyTokenRefreshSerializer(TokenRefreshSerializer):
+    """
+    Кастомный сериализатор для обновления access токена.
+    Работает с нашими кастомными токенами.
+    """
+
+    def validate(self, attrs):
+        refresh_token = attrs.get('refresh')
+
+        if not refresh_token:
+            raise InvalidToken('Refresh token is required')
+
+        try:
+            # Создаем кастомный refresh токен из строки
+            refresh = CustomRefreshToken(refresh_token)
+
+            # Проверяем, что токен правильного типа
+            if refresh.payload.get('type') != 'user':
+                raise InvalidToken('Token has wrong type')
+
+            # Проверяем, что это refresh токен
+            if refresh.payload.get('token_type') != 'refresh':
+                raise InvalidToken('Token is not a refresh token')
+
+            # Получаем пользователя из токена
+            user_id = refresh.payload.get('user_id')
+            if not user_id:
+                raise InvalidToken('Token has no user_id claim')
+
+            # Получаем пользователя
+            try:
+                user = User.objects.get(pk=user_id)
+            except User.DoesNotExist:
+                raise InvalidToken('User not found')
+
+            # Проверяем активность пользователя
+            if not user.is_active:
+                raise InvalidToken('User is not active')
+
+            # Проверяем согласие (опционально, при refresh обычно не нужно)
+            # try:
+            #     self.check_consent(UserConsent, user=user)
+            # except Exception as e:
+            #     raise InvalidToken(str(e))
+
+            # Генерируем новый access токен
+            access_token = refresh.access_token
+
+            return {
+                'access': str(access_token),
+                'refresh': str(refresh),  # Тот же refresh токен
+            }
+
+        except Exception as e:
+            raise InvalidToken(str(e))
+
+
+class MyTokenVerifySerializer(TokenVerifySerializer):
+    """
+    Кастомный сериализатор для верификации токенов.
+    Работает с нашими кастомными токенами.
+    """
+
+    def validate(self, attrs):
+        token = attrs.get('token')
+
+        if not token:
+            raise InvalidToken('Token is required')
+
+        try:
+            # Пробуем декодировать как access токен
+            access = CustomAccessToken(token)
+
+            # Проверяем тип
+            if access.payload.get('type') != 'user':
+                raise InvalidToken('Token has wrong type')
+
+            if access.payload.get('token_type') != 'access':
+                raise InvalidToken('Token is not an access token')
+
+            # Если нужно, можно проверить пользователя
+            user_id = access.payload.get('user_id')
+            if user_id:
+                try:
+                    user = User.objects.get(pk=user_id)
+                    if not user.is_active:
+                        raise InvalidToken('User is not active')
+                except User.DoesNotExist:
+                    pass  # Игнорируем, если пользователь не найден
+
+            return {}
+
+        except Exception as e:
+            # Если не access, пробуем как refresh
+            try:
+                refresh = CustomRefreshToken(token)
+
+                if refresh.payload.get('type') != 'user':
+                    raise InvalidToken('Token has wrong type')
+
+                if refresh.payload.get('token_type') != 'refresh':
+                    raise InvalidToken('Token is not a refresh token')
+
+                return {}
+
+            except Exception:
+                # Если оба варианта не сработали
+                raise InvalidToken(str(e))
