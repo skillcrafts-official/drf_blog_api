@@ -3,11 +3,17 @@ from django.urls import path
 
 from apps.my_workflows.views import TaskAPIView
 from apps.my_workflows.viewsets import (
-    TaskViewSet, CycleTimeViewSet, AcceptanceCriteriaViewSet, TimeEntryViewSet
+    ProjectViewSet, TagViewSet, TaskViewSet, TagsViewSet, CycleTimeViewSet,
+    AcceptanceCriteriaViewSet, TimeEntryViewSet
 )
 
 
 urlpatterns = [
+    path(
+        'projects/',
+        ProjectViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='get_all_user_projects_or_creane_else'
+    ),
     path(
         'tasks/',
         TaskViewSet.as_view({'get': 'list', 'post': 'create'}),
@@ -39,4 +45,14 @@ urlpatterns = [
         TimeEntryViewSet.as_view({'get': 'list', 'post': 'create'}),
         name='time_entries_update'
     ),
+    path(
+        'tasks/tags/',
+        TagsViewSet.as_view({'get': 'list'}),
+        name='filtered_tag_list'
+    ),
+    path(
+        'tasks/<int:task_id>/tags/',
+        TagViewSet.as_view({'get': 'list', 'post': 'create'}),
+        name='task_tags'
+    )
 ]

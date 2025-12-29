@@ -1,7 +1,11 @@
 from math import radians
 from typing import Sequence
+
+from django.core.cache import cache
 from django.db.models.query import QuerySet
+
 from rest_framework import viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -9,15 +13,30 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from apps.profiles.models import Profile
 from apps.privacy_settings.models import ProfilePrivacySettings
 
-from apps.my_workflows.models import AcceptanceCriteria, Task, CycleTime, TimeEntry
-from apps.my_workflows.serializers import (
-    TaskSerializer, CycleTimeSerializer, AcceptanceCriteriaSerializer, TimeEntrySerializer
+from apps.my_workflows.models import (
+    AcceptanceCriteria, Project, Tag, Task, CycleTime, TimeEntry
 )
-from apps.my_workflows.filters import TaskFilter
+from apps.my_workflows.serializers import (
+    ProjectSerializer, TagSerializer, TaskSerializer, CycleTimeSerializer,
+    AcceptanceCriteriaSerializer, TimeEntrySerializer, UpdateTagSerializer
+)
+from apps.my_workflows.filters import TagFilter, TaskFilter
+from rest_framework.serializers import BaseSerializer
 
 
 class BaseModelViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
+
+
+class ProjectViewSet(BaseModelViewSet):
+    queryset = Project.objects.all()
+    serializer_class = ProjectSerializer
+
+    def get_queryset(self) -> QuerySet:
+        if self.request.method == 'GET':
+            queryset = Project.objects.filter(profile=self.request.user.profile)
+            return queryset
+        return super().get_queryset()
 
 
 class TaskViewSet(BaseModelViewSet):
@@ -130,3 +149,46 @@ class TimeEntryViewSet(BaseModelViewSet):
     def get_queryset(self):
         queryset = TimeEntry.objects.filter(task=self.kwargs.get('task_id'))
         return queryset
+
+
+class TagViewSet(BaseModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    # filterset_class = TagFilter
+
+    def get_queryset(self) -> QuerySet:
+        queryset = Tag.objects.filter(
+            task=self.kwargs.get('task_id'), profile=self.request.user.profile
+        )
+        return queryset
+
+    def get_serializer_class(self) -> type[BaseSerializer]:
+        if self.request.method == 'POST':
+            return UpdateTagSerializer
+        return super().get_serializer_class()
+
+
+class TagsViewSet(BaseModelViewSet):
+    queryset = Tag.objects.distinct('name')
+    serializer_class = TagSerializer
+    filterset_class = TagFilter
+
+    # def get_queryset(self) -> QuerySet:
+    #     queryset = Tag.objects.filter(
+    #         task=self.kwargs.get('task_id'), profile=self.request.user.profile
+    #     )
+    #     return queryset
+
+    # @action(detail=False, methods=['get'])
+    # def tag_list(self, request):
+    #     """
+    #     Кастомный метод для возвращения списка тегов
+    #     """
+    #     cache_key = 'profile_task_tag_list'
+    #     tags = cache.get(cache_key)
+
+    #     if not tags:
+    #         tags = self.queryset.values()
+    #         cache.set(cache_key, tags, timeout=3600)  # Кэш на 1 час
+
+    #     return Response(tags)

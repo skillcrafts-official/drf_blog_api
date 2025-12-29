@@ -13,6 +13,29 @@ PRIVACIES = [
 ]
 
 
+class Project(models.Model):
+    """
+    Модель хранит список направлений деятельности пользователя
+    для объединения задач. У каждого пользователя свой набор проектов.
+    """
+    name = models.CharField(
+        max_length=100, null=True, blank=True, default='Общее'
+    )
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='projects'
+    )
+
+    class Meta:
+        unique_together = ['profile', 'name']
+        indexes = [
+            models.Index(fields=['profile', 'name']),
+        ]
+
+
 class Task(models.Model):
     # --- Содержание (ваши текущие поля + статус) ---
     todo = models.CharField(null=True, blank=True)  # Краткое название/суть
@@ -74,13 +97,15 @@ class Task(models.Model):
         null=True,
         related_name='created_tasks'
     )  # Кто владелец задачи (в чьем профиле создана задача)
+
     # Будущее расширение, сейчас только задачи
-    # project = models.ForeignKey(
-    #     'Project',
-    #     on_delete=models.SET_NULL,
-    #     null=True,
-    #     blank=True
-    # )  # Группировка задач. Project — отдельная модель.
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='project_tasks'
+    )  # Группировка задач. Project — отдельная модель.
 
     # --- Плановые метрики (для сравнения "план vs факт") ---
     estimated_effort = models.PositiveIntegerField(
@@ -94,6 +119,34 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.pk}: {self.todo} ({self.get_status_display()})"
+
+
+class Tag(models.Model):
+    """
+    Модель хранит список тегов для задач пользователя.
+    Теги нужны, чтобы помогать пользователю находить задачу для
+    фокусировки.
+    """
+    name = models.CharField(max_length=50)
+
+    profile = models.ForeignKey(
+        Profile,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='profile_tags'
+    )
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name='task_tags'
+    )
+
+    class Meta:
+        unique_together = ['profile', 'name', 'task']
+        indexes = [
+            models.Index(fields=['profile', 'name', 'task']),
+        ]
 
 
 class CycleTime(models.Model):

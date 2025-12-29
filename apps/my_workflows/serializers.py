@@ -1,10 +1,12 @@
 from email.policy import default
+from typing import Any
+from attr import field
 from django.db.models import Sum
 
 from rest_framework import serializers
 
 from apps.my_workflows.models import (
-    Task, CycleTime, AcceptanceCriteria, TimeEntry
+    Project, Tag, Task, CycleTime, AcceptanceCriteria, TimeEntry
 )
 
 
@@ -44,6 +46,31 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         return representation
 
 
+class TagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = ['name']
+
+    def to_representation(self, instance: Any) -> str | Any:
+        representation = super().to_representation(instance)
+        return representation.get('name')
+
+
+class UpdateTagSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Tag
+        fields = '__all__'
+
+
+class ProjectSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Project
+        fields = '__all__'
+
+
 class TaskSerializer(serializers.ModelSerializer):
     criterias = AcceptanceCriteriaSerializer(
         source='acceptance_criterias', many=True, read_only=True
@@ -51,13 +78,15 @@ class TaskSerializer(serializers.ModelSerializer):
     all_spents = TimeEntrySerializer(
         source='time_entries', many=True, read_only=True
     )
+    tags = TagSerializer(source='task_tags', many=True, read_only=True)
 
     class Meta:
         model = Task
-        fields = [
-            'id', 'todo', 'description', 'criterias', 'all_spents', 'status',
-            'priority', 'date_created', 'date_updated', 'privacy', 'profile'
-        ]
+        # fields = [
+        #     'id', 'todo', 'description', 'criterias', 'all_spents', 'status',
+        #     'priority', 'date_created', 'date_updated', 'privacy', 'profile'
+        # ]
+        fields = '__all__'
         read_only_fields = ['date_created']
 
     def to_representation(self, instance):
