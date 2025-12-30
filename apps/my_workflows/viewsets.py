@@ -18,7 +18,8 @@ from apps.my_workflows.models import (
 )
 from apps.my_workflows.serializers import (
     ProjectSerializer, TagSerializer, TaskSerializer, CycleTimeSerializer,
-    AcceptanceCriteriaSerializer, TimeEntrySerializer, UpdateTagSerializer
+    AcceptanceCriteriaSerializer, TimeEntrySerializer, UpdateTagSerializer,
+    UpdateTaskProjectSerializer
 )
 from apps.my_workflows.filters import TagFilter, TaskFilter
 from rest_framework.serializers import BaseSerializer
@@ -192,3 +193,16 @@ class TagsViewSet(BaseModelViewSet):
     #         cache.set(cache_key, tags, timeout=3600)  # Кэш на 1 час
 
     #     return Response(tags)
+
+
+class TaskProjectViewSet(BaseModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = UpdateTaskProjectSerializer
+
+    def get_object(self):
+        task = Task.objects.filter(
+            profile=self.request.user.profile, pk=self.kwargs['task_id']
+        ).first()
+        if task is None:
+            raise NotFound(detail='Task not found!')
+        return task

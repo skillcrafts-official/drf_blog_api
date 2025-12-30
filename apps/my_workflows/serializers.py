@@ -75,6 +75,13 @@ class ProjectSerializer(serializers.ModelSerializer):
     #     return representation.get('name')
 
 
+class UpdateTaskProjectSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Task
+        fields = ['project']
+
+
 class TaskSerializer(serializers.ModelSerializer):
     criterias = AcceptanceCriteriaSerializer(
         source='acceptance_criterias', many=True, read_only=True
@@ -83,7 +90,7 @@ class TaskSerializer(serializers.ModelSerializer):
         source='time_entries', many=True, read_only=True
     )
     tags = TagSerializer(source='task_tags', many=True, read_only=True)
-    project = ProjectSerializer(many=False)
+    project = ProjectSerializer(many=False, read_only=True)
 
     class Meta:
         model = Task

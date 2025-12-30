@@ -4,7 +4,7 @@ from django.urls import path
 from apps.my_workflows.views import TaskAPIView
 from apps.my_workflows.viewsets import (
     ProjectViewSet, TagViewSet, TaskViewSet, TagsViewSet, CycleTimeViewSet,
-    AcceptanceCriteriaViewSet, TimeEntryViewSet
+    AcceptanceCriteriaViewSet, TimeEntryViewSet, TaskProjectViewSet
 )
 
 
@@ -24,6 +24,11 @@ urlpatterns = [
         'tasks/<int:task_id>/',
         TaskViewSet.as_view({
             'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'}),
+        name='rud_user_task'
+    ),
+    path(
+        'tasks/<int:task_id>/projects/',
+        TaskProjectViewSet.as_view({'patch': 'partial_update'}),
         name='rud_user_task'
     ),
     path(
