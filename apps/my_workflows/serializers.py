@@ -70,6 +70,10 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = '__all__'
 
+    # def to_representation(self, instance: Any) -> str | Any:
+    #     representation = super().to_representation(instance)
+    #     return representation.get('name')
+
 
 class TaskSerializer(serializers.ModelSerializer):
     criterias = AcceptanceCriteriaSerializer(
@@ -79,6 +83,7 @@ class TaskSerializer(serializers.ModelSerializer):
         source='time_entries', many=True, read_only=True
     )
     tags = TagSerializer(source='task_tags', many=True, read_only=True)
+    project = ProjectSerializer(many=False)
 
     class Meta:
         model = Task
