@@ -53,8 +53,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['name']
 
     def to_representation(self, instance: Any) -> str | Any:
-        representation = super().to_representation(instance)
-        return representation.get('name')
+        return instance.name
 
 
 class UpdateTagSerializer(serializers.ModelSerializer):

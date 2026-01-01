@@ -2,9 +2,10 @@ from math import radians
 from typing import Sequence
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models.query import QuerySet
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -158,15 +159,41 @@ class TagViewSet(BaseModelViewSet):
     # filterset_class = TagFilter
 
     def get_queryset(self) -> QuerySet:
-        queryset = Tag.objects.filter(
-            task=self.kwargs.get('task_id'), profile=self.request.user.profile
+        """Получение тегов только для конкретной задачи и пользователя"""
+        return Tag.objects.filter(
+            task=self.kwargs.get('task_id'),
+            profile=self.request.user.profile
         )
-        return queryset
 
     def get_serializer_class(self) -> type[BaseSerializer]:
+        """Разные сериализаторы для разных методов"""
         if self.request.method == 'POST':
             return UpdateTagSerializer
         return super().get_serializer_class()
+
+    def create(self, request, *args, **kwargs) -> Response:
+        """
+        Создание тега и возврат списка всех тегов задачи в виде строк
+        """
+        # Добавляем обязательные поля
+        request_data = request.data.copy()  # Создаем копию, а не изменяем оригинал
+        request_data['profile'] = request.user.profile.pk
+        request_data['task'] = kwargs.get('task_id')
+
+        # Используем транзакцию для атомарности
+        with transaction.atomic():
+            # Создаем тег
+            serializer = self.get_serializer(data=request_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            # Получаем ВСЕ теги для этой задачи после создания
+            tags = self.get_queryset()
+
+            return Response(
+                [tag.name for tag in tags],
+                status=status.HTTP_201_CREATED,
+            )
 
 
 class TagsViewSet(BaseModelViewSet):
