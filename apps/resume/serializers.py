@@ -1,5 +1,6 @@
 """Serializers for $PATH_TO_APP"""
 
+from typing import Any
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
@@ -39,8 +40,11 @@ class WorkResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkResult
-        fields = '__all__'
+        fields = ['result']
         # exclude = ['work_experience_id']
+
+    def to_representation(self, instance: Any) -> str | Any:
+        return instance.result
 
 
 class SummaryWorkResultSerializer(BaseModelSerializer):
@@ -74,6 +78,7 @@ class SummaryWorkExperienceSerializer(BaseModelSerializer):
 
 
 class WorkExperienceSerializer(serializers.ModelSerializer):
+    results = WorkResultSerializer(many=True, read_only=True)
 
     class Meta:
         model = WorkExperience
