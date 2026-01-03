@@ -1,6 +1,8 @@
+from django.db import transaction
 from django.core.cache import cache
 
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.serializers import BaseSerializer
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -9,6 +11,7 @@ from rest_framework.response import Response
 from apps.resume.serializers import (
     SummarySerializer, PrivacySummarySerializer,
     LanguageSerializer, UpdateLanguageSerializer, PrivacyLanguageSerializer,
+    UpdateWorkResultSerializer,
     WorkExperienceSerializer, PrivacyWorkExperienceSerializer,
     WorkResultSerializer, PrivacyWorkResultSerializer,
     SertificateSerializer, UpdateSertificateSerializer,
@@ -111,6 +114,34 @@ class WorkResultViewSet(BaseModelViewSet):
     serializer_class = WorkResultSerializer
     filterset_class = WorkResultFilters
     # lookup_field = 'pk'
+
+    def get_serializer_class(self) -> type[BaseSerializer]:
+        """Разные сериализаторы для разных методов"""
+        if self.request.method == 'POST':
+            return UpdateWorkResultSerializer
+        return super().get_serializer_class()
+
+    def create(self, request, *args, **kwargs) -> Response:
+        """
+        Создание тега и возврат списка всех тегов задачи в виде строк
+        """
+        # Добавляем обязательные поля
+        request_data = request.data.copy()
+
+        # Используем транзакцию для атомарности
+        with transaction.atomic():
+            # Создаем тег
+            serializer = self.get_serializer(data=request_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            # Получаем ВСЕ результаты места работы после создания
+            results = self.get_queryset()
+
+            return Response(
+                [result.result for result in results],
+                status=status.HTTP_201_CREATED,
+            )
 
 
 # class UpdateWorkResultViewSet(BaseModelViewSet):

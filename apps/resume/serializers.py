@@ -50,11 +50,11 @@ class SummaryWorkResultSerializer(BaseModelSerializer):
         fields = '__all__'
 
 
-# class UpdateWorkResultSerializer(BaseModelSerializer):
+class UpdateWorkResultSerializer(BaseModelSerializer):
 
-#     class Meta:
-#         model = WorkResult
-#         fields = ['result']
+    class Meta:
+        model = WorkResult
+        fields = '__all__'
 
 
 class PrivacyWorkResultSerializer(BaseModelSerializer):
