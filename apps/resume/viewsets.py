@@ -1,4 +1,5 @@
 from django.db import transaction
+from django.db.models.query import QuerySet
 from django.core.cache import cache
 
 from rest_framework import viewsets, status
@@ -115,6 +116,12 @@ class WorkResultViewSet(BaseModelViewSet):
     filterset_class = WorkResultFilters
     # lookup_field = 'pk'
 
+    # def get_queryset(self) -> QuerySet:
+    #     """Получение результатов только для конкретной места работы"""
+    #     return WorkResult.objects.filter(
+    #         work_experience_id=self.request.data.get('work_experience'),
+    #     )
+
     def get_serializer_class(self) -> type[BaseSerializer]:
         """Разные сериализаторы для разных методов"""
         if self.request.method == 'POST':
@@ -136,7 +143,9 @@ class WorkResultViewSet(BaseModelViewSet):
             serializer.save()
 
             # Получаем ВСЕ результаты места работы после создания
-            results = self.get_queryset()
+            results = WorkResult.objects.filter(
+                work_experience=serializer.data.get('work_experience'),
+            )
 
             return Response(
                 [result.result for result in results],
