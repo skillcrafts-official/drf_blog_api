@@ -105,42 +105,20 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    # def check_permissions(self, request: Request) -> None:
-    #     if request.method == 'GET':
+    def check_permissions(self, request: Request) -> None:
+        # user = request.user
+        # method = request.method
 
-    #     return super().check_permissions(request)
+        # if request.method == 'POST' and self.:
+
+        return super().check_permissions(request)
 
     def create(self, request: Request, *args: Any, **kwargs: Any) -> Response:
         """
-        Кастомизация метода нужна, чтобы автоматически создавать
-        топик в своей модели, если было передано поле topic.
-        В противном случае создавать запись без топика.
+        Создаёт новую запись в карту знаний
         """
-        # request_data = request.data.copy()
+        request_data = request.data.copy()
+        request_data['user'] = request.user.pk
+        request.data.update(**request_data)
 
-        # if 'topic' not in request_data:
-        #     # request.data.update(**request_data)
-        #     return super().create(request, *args, **kwargs)
-
-        # if not request_data.get('topic'):
-        #     request_data.pop('topic')
-        #     request.data.update(**request_data)
-        #     return super().create(request, *args, **kwargs)
-
-        # topic_value = request_data.get('topic').strip()
-        # topic = None
-
-        # if isinstance(topic_value, str):
-        #     topic, _ = Topic.objects.get_or_create(title__iexact=topic_value)
-        # elif isinstance(topic_value, int):
-        #     try:
-        #         topic = Topic.objects.get(pk=topic_value)
-        #     except Topic.DoesNotExist:
-        #         raise NotFound()
-
-        # # if not topic:
-        # #     topic = Topic.objects.create(title=topic_value)
-
-        # request_data['topic'] = topic.pk
-        # request.data.update(**request_data)
         return super().create(request, *args, **kwargs)
