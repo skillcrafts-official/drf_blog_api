@@ -47,6 +47,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
     def get_queryset(self) -> QuerySet:
         # Получаем whitelist и blacklist текущего пользователя
         current_user = self.request.user
+        method = self.request.method
 
         try:
             my_whitelist = current_user.profile.profile_privacies.whitelist.all()
@@ -65,6 +66,17 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
         # 1. Я вижу все свои записи + неопубликованные + удалённые
         filter_conditions |= Q(user=current_user)
+
+        if method == 'POST':
+            queryset = (
+                MyKnowledge.objects
+                .filter(filter_conditions)
+                .exclude(exclude_conditions)
+                .select_related('user').select_related('parent')
+                .distinct()
+            )
+
+            return queryset
 
         # 2. Я не вижу все записи пользователей из моего blacklist
         if my_blacklist.exists():
@@ -134,9 +146,6 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
             # print(f"{topics.values() = }")
 
             return Response(
-                [
-                    topic for topic in topics.values()
-                    if topic.get('user_id', None) == request.user.pk
-                ],
+                topics.values(),
                 status=status.HTTP_201_CREATED,
             )
