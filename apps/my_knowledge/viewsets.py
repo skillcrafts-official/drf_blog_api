@@ -1,6 +1,5 @@
 """The viewsets extentions for app my_knowledge"""
 
-from turtle import title
 from typing import Any
 from django.db import transaction
 from django.db.models import Q
