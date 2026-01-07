@@ -3,7 +3,8 @@ from django.urls import path
 
 from apps.privacy_settings.views import (
     ProfilePrivacySettingsView, UpdateProfilePrivacySettingsView,
-    ProfileUserBlockView, ProfileUserUnblockView
+    ProfileUserBlockView, ProfileUserUnblockView,
+    ProfileUserAddView, ProfileUserExcludeView
     # ProfileGetPrivacySettingsView, ProfileSetPrivacySettingsView
 )
 
@@ -27,6 +28,16 @@ urlpatterns = [
     path(
         'profiles/<int:pk>/blacklist/user/unblock/',
         ProfileUserUnblockView.as_view({'patch': 'update'}),
+        name='profile_remove_user_from_blacklist'
+    ),
+    path(
+        'profiles/<int:pk>/whitelist/user/add/',
+        ProfileUserAddView.as_view({'patch': 'update'}),
+        name='profile_add_user_in_blacklist'
+    ),
+    path(
+        'profiles/<int:pk>/whitelist/user/exclude/',
+        ProfileUserExcludeView.as_view({'patch': 'update'}),
         name='profile_remove_user_from_blacklist'
     ),
 ]

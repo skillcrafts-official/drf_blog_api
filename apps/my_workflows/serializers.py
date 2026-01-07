@@ -1,6 +1,4 @@
-from email.policy import default
 from typing import Any
-from attr import field
 from django.db.models import Sum
 
 from rest_framework import serializers

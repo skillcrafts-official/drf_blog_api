@@ -37,7 +37,8 @@ urlpatterns = [
     path('posts/', include('apps.posts.urls')),
     path('privacy-settings/', include('apps.privacy_settings.urls')),
     path('resume/', include('apps.resume.urls')),
-    path('workflows/', include('apps.my_workflows.urls'))
+    path('workflows/', include('apps.my_workflows.urls')),
+    path('knowledge/', include('apps.my_knowledge.urls')),
 ]
 
 if settings.DEBUG:

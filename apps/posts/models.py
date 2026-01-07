@@ -10,13 +10,6 @@ POST_STATUS = [
     ('archived', 'В архиве'),
 ]
 
-COMMENT_STATUS = [
-    ('pending', 'На модерации'),
-    ('approved', 'Одобрено'),
-    ('rejected', 'Отклонено'),
-    ('deleted', 'Удалено'),
-]
-
 
 def post_images_path(instance, filename):
     """Путь для изображений поста"""
@@ -107,6 +100,13 @@ class Post(BaseModel):
 
 
 class PostComment(BaseModel):
+    COMMENT_STATUS = [
+        ('pending', 'На модерации'),
+        ('approved', 'Одобрено'),
+        ('rejected', 'Отклонено'),
+        ('deleted', 'Удалено'),
+    ]
+
     """Модель для хранения комментариев к статьям"""
     parent = models.ForeignKey(
         'self',
