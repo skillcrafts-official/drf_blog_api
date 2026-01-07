@@ -119,6 +119,24 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         """
         request_data = request.data.copy()
         request_data['user'] = request.user.pk
-        request.data.update(**request_data)
 
-        return super().create(request, *args, **kwargs)
+        # Используем транзакцию для атомарности
+        with transaction.atomic():
+            # Создаем topic
+            serializer = self.get_serializer(data=request_data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            # Получаем ВСЕ topic для текущего пользователя после создания
+            topics = self.get_queryset()
+            # serializer = self.get_serializer(data=topics.values())
+            # print(f"{serializer.data = }")
+            # print(f"{topics.values() = }")
+
+            return Response(
+                [
+                    topic for topic in topics.values()
+                    if topic.get('user_id', None) == request.user.pk
+                ],
+                status=status.HTTP_201_CREATED,
+            )
