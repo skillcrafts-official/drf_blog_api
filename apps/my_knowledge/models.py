@@ -66,7 +66,7 @@ class MyKnowledge(PrivacyBaseModel):
         max_length=300,
         null=True, blank=True
     )
-    note = models.TextField()
+    note = models.TextField(null=True)
 
     published_at = models.DateTimeField(default=None, null=True, blank=True)
     deleted_at = models.DateTimeField(default=None, null=True, blank=True)
