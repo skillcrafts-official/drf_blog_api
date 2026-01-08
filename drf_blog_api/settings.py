@@ -90,6 +90,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
     'django_cleanup.apps.CleanupConfig',
+    'mptt',
     # drf apps
     'apps.accounts', 'apps.profiles', 'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
