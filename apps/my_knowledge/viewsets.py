@@ -62,7 +62,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         # Какие записи я (current_user) буду видеть
         filter_conditions = Q()
 
-        # при создании exclude_conditions отвечаем на вопрос: 
+        # при создании exclude_conditions отвечаем на вопрос:
         # Какие записи я (current_user) НЕ буду видеть
         exclude_conditions = Q()
 
