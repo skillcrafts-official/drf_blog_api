@@ -1,6 +1,9 @@
 """The viewsets extentions for app my_knowledge"""
 
 from typing import Any
+
+from mptt.templatetags.mptt_tags import cache_tree_children
+
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
@@ -147,19 +150,31 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
         # Используем транзакцию для атомарности
         with transaction.atomic():
-            # Создаем topic
+            # 1. Создаем topic
             serializer = self.get_serializer(data=request_data)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-            # Получаем ВСЕ topic для текущего пользователя после создания
-            topics = self.get_queryset()
-            # serializer = self.get_serializer(data=topics.values())
-            # print(f"{serializer.data = }")
-            # print(f"{topics.values() = }")
+            # 2. Получаем ВСЕ topic для текущего пользователя после создания
+            # topics_queryset = self.get_queryset()
+
+            # 3. Если используете MPTT, оптимизируем получение дерева
+            all_topics = MyKnowledge.objects.filter(
+                user=request.user,
+                is_deleted=False
+            )
+
+            # 4. Кэшируем дерево для эффективной рекурсии
+            cached_tree = cache_tree_children(all_topics)
+
+            # 5. Получаем только корневые узлы
+            root_nodes = [node for node in cached_tree if node.parent is None]
+
+            # 6. Используем сериализатор с many=True
+            output_serializer = self.get_serializer(root_nodes, many=True)
 
             return Response(
-                topics.values(),
+                output_serializer.data,  # ← сериализованные данные
                 status=status.HTTP_201_CREATED,
             )
 

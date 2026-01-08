@@ -1,3 +1,5 @@
+from mptt.models import MPTTModel, TreeForeignKey
+
 from django.db import models
 from django.utils import timezone
 
@@ -54,7 +56,7 @@ class Topic(AbstractBaseModel):
         verbose_name_plural = 'Темы'
 
 
-class MyKnowledge(PrivacyBaseModel):
+class MyKnowledge(MPTTModel, PrivacyBaseModel):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -74,17 +76,20 @@ class MyKnowledge(PrivacyBaseModel):
     is_published = models.BooleanField(default=False, blank=True)
     is_deleted = models.BooleanField(default=False, blank=True)
 
-    parent = models.ForeignKey(
+    parent = TreeForeignKey(
         'self',
         on_delete=models.CASCADE,
         null=True, blank=True,
-        related_name='replies'
+        related_name='children'
     )
+
+    class MPTTMeta:
+        order_insertion_by = ['created_at']
 
     class Meta:
         verbose_name = 'Мои знания'
         verbose_name_plural = 'Мои знания'
-        unique_together = ['user', 'parent', 'topic']
+        # unique_together = ['user', 'topic']
         indexes = [
             models.Index(fields=['privacy']),
             models.Index(fields=['user', 'privacy']),

@@ -13,7 +13,23 @@ class TopicSerializer(serializers.ModelSerializer):
 
 
 class MyKnowledgeSerializer(serializers.ModelSerializer):
+    children = serializers.SerializerMethodField()
 
     class Meta:
         model = MyKnowledge
         fields = '__all__'
+
+    def get_children(self, obj):
+        """Получаем дочерние элементы через MPTT"""
+        # Используем предзагруженные children если есть
+        if hasattr(obj, 'children_cache'):
+            children = obj.children_cache
+        else:
+            children = obj.children.filter(is_deleted=False)
+
+        if not children.exists():
+            return []
+
+        # Рекурсивно сериализуем детей
+        serializer = self.__class__(children, many=True, context=self.context)
+        return serializer.data
