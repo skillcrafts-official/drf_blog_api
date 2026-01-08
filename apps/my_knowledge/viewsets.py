@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.core.cache import cache
 
+from django.http import HttpResponse
 from rest_framework import viewsets, status
 from rest_framework.serializers import BaseSerializer
 from rest_framework.decorators import action
@@ -48,6 +49,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         # Получаем whitelist и blacklist текущего пользователя
         current_user = self.request.user
         method = self.request.method
+        requested_user = self.kwargs.get('user_id', None)
 
         try:
             my_whitelist = current_user.profile.profile_privacies.whitelist.all()
@@ -64,41 +66,52 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         # Какие записи я (current_user) НЕ буду видеть
         exclude_conditions = Q()
 
-        # 1. Я вижу все свои записи + неопубликованные + удалённые
-        filter_conditions |= Q(user=current_user)
+        if requested_user:
+            if current_user.pk == requested_user:
+                filter_conditions |= Q(user=current_user)
+            else:
+                filter_conditions |= Q(privacy__in=['all', 'not_all'])
+                filter_conditions |= Q(
+                    privacy='no_one_except',
+                    user__profile__profile_privacies__whitelist=current_user
+                )
+                exclude_conditions |= Q(user__in=my_blacklist)
+                filter_conditions &= Q(user__id=requested_user)
+        else:
 
-        if method == 'POST':
-            queryset = (
-                MyKnowledge.objects
-                .filter(filter_conditions)
-                .exclude(exclude_conditions)
-                .select_related('user').select_related('parent')
-                .distinct()
+            # 1. Я вижу все свои записи + неопубликованные + удалённые
+            filter_conditions |= Q(user=current_user)
+
+            if method == 'POST':
+                queryset = (
+                    MyKnowledge.objects.filter(filter_conditions)
+                    .select_related('user').select_related('parent')
+                    .distinct()
+                )
+
+                return queryset
+
+            # 2. Я не вижу все записи пользователей из моего blacklist
+            if my_blacklist.exists():
+                exclude_conditions |= Q(user__in=my_blacklist)
+
+            # 3. Я вижу все публичные записи
+            filter_conditions |= Q(privacy__in=['all', 'not_all'])
+
+            # # 4. Я не вижу публичные записи, если я в blacklist автора записи
+            exclude_conditions |= Q(
+                privacy='not_all',
+                user__profile__profile_privacies__blacklist=current_user
             )
 
-            return queryset
+            # 5. Я вижу приватные записи, если я в whitelist автора записи
+            filter_conditions |= Q(
+                privacy='no_one_except',
+                user__profile__profile_privacies__whitelist=current_user
+            )
 
-        # 2. Я не вижу все записи пользователей из моего blacklist
-        if my_blacklist.exists():
-            exclude_conditions |= Q(user__in=my_blacklist)
-
-        # 3. Я вижу все публичные записи
-        filter_conditions |= Q(privacy__in=['all', 'not_all'])
-
-        # # 4. Я не вижу публичные записи, если я в blacklist автора записи
-        exclude_conditions |= Q(
-            privacy='not_all',
-            user__profile__profile_privacies__blacklist=current_user
-        )
-
-        # 5. Я вижу приватные записи, если я в whitelist автора записи
-        filter_conditions |= Q(
-            privacy='no_one_except',
-            user__profile__profile_privacies__whitelist=current_user
-        )
-
-        # 6. Я не вижу все приватные записи nobody
-        # exclude_conditions |= Q(Q(privacy='nobody') & Q(user!=current_user))
+            # 6. Я не вижу все приватные записи nobody
+            # exclude_conditions |= Q(Q(privacy='nobody') & Q(user!=current_user))
 
         # 6.5. Я не вижу все неопубликованные и удалённые записи
         exclude_conditions |= (
@@ -149,3 +162,14 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
                 topics.values(),
                 status=status.HTTP_201_CREATED,
             )
+
+    @action(methods=["GET"], detail=False)
+    def get_user_note_list(
+            self, request: Request, *args: Any, **kwargs: Any
+    ) -> Response:
+        current_user = request.user
+        self.kwargs.update(**kwargs)
+        print(f"{current_user = }")
+        notes = self.get_queryset()
+        print(notes)
+        return Response(data=notes.values(), status=status.HTTP_200_OK)
