@@ -53,7 +53,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         current_user = self.request.user
         method = self.request.method
         requested_user = self.kwargs.get('user_id', None)
-
+        # return super().get_queryset()
         try:
             my_whitelist = current_user.profile.profile_privacies.whitelist.all()
             my_blacklist = current_user.profile.profile_privacies.blacklist.all()
@@ -87,7 +87,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
             if method == 'POST':
                 queryset = (
-                    MyKnowledge.objects.filter(filter_conditions)
+                    MyKnowledge.objects.filter(filter_conditions).filter(parent=None)
                     .select_related('user').select_related('parent')
                     .distinct()
                 )
@@ -125,7 +125,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         # Запрос знаний
         queryset = (
             MyKnowledge.objects
-            .filter(filter_conditions)
+            .filter(filter_conditions).filter(parent=None)
             .exclude(exclude_conditions)
             .select_related('user').select_related('parent')
             .distinct()
