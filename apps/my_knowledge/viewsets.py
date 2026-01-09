@@ -70,6 +70,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
         exclude_conditions = Q()
 
         if requested_user:
+            print('im here')
             if current_user.pk == requested_user:
                 filter_conditions |= Q(user=current_user)
             else:
@@ -87,7 +88,8 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
             if method == 'POST':
                 queryset = (
-                    MyKnowledge.objects.filter(filter_conditions).filter(parent=None)
+                    MyKnowledge.objects.filter(filter_conditions)
+                    .filter(parent=None)
                     .select_related('user').select_related('parent')
                     .distinct()
                 )
@@ -122,6 +124,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
             (Q(is_published=False) | Q(is_deleted=True))
         )
 
+        print('and im hiere')
         # Запрос знаний
         queryset = (
             MyKnowledge.objects
@@ -182,9 +185,21 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
     def get_user_note_list(
             self, request: Request, *args: Any, **kwargs: Any
     ) -> Response:
-        current_user = request.user
         self.kwargs.update(**kwargs)
-        print(f"{current_user = }")
-        notes = self.get_queryset()
-        print(notes)
-        return Response(data=notes.values(), status=status.HTTP_200_OK)
+
+        all_topics = self.get_queryset()
+
+        # 4. Кэшируем дерево для эффективной рекурсии
+        cached_tree = cache_tree_children(all_topics)
+
+        # 5. Получаем только корневые узлы
+        root_nodes = [node for node in cached_tree if node.parent is None]
+
+        # 6. Используем сериализатор с many=True
+        output_serializer = self.get_serializer(root_nodes, many=True)
+
+        return Response(
+            output_serializer.data,  # ← сериализованные данные
+            status=status.HTTP_200_OK,
+        )
+        # return Response(data=notes.values(), status=status.HTTP_200_OK)
