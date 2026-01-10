@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from apps.my_knowledge.viewsets import TopicViewSet, MyKnowledgeViewSet
+from apps.my_knowledge.viewsets import NoteViewSet, MyKnowledgeViewSet
 
 
 urlpatterns = [
@@ -16,10 +16,16 @@ urlpatterns = [
         name='get_notes_only_user_id'
     ),
     path(
-        '<int:note_id>/',
+        'topics/<int:topic_id>/',
         MyKnowledgeViewSet.as_view({
             'get': 'retrieve', 'patch': 'partial_update', 'delete': 'destroy'
-        }), name='get_one_note_or_update_or_delete'
+        }), name='get_one_topic_or_update_or_delete'
+    ),
+    path(
+        'notes/<int:note_id>/',
+        NoteViewSet.as_view({
+            'get': 'retrieve', 'patch': 'partial_update'
+        }), name='get_or_update_one_note'
     ),
     # path(
     #     'topics/', TopicViewSet.as_view({'get': 'list', 'post': 'create'}),

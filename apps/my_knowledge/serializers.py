@@ -2,13 +2,13 @@
 
 from rest_framework import serializers
 
-from apps.my_knowledge.models import MyKnowledge, Topic
+from apps.my_knowledge.models import MyKnowledge, Note
 
 
-class TopicSerializer(serializers.ModelSerializer):
+class NoteSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = Topic
+        model = Note
         fields = '__all__'
 
 

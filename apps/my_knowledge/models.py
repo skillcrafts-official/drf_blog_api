@@ -68,7 +68,6 @@ class MyKnowledge(MPTTModel, PrivacyBaseModel):
         max_length=300,
         null=True, blank=True
     )
-    note = models.TextField(null=True)
 
     published_at = models.DateTimeField(default=None, null=True, blank=True)
     deleted_at = models.DateTimeField(default=None, null=True, blank=True)
@@ -95,12 +94,23 @@ class MyKnowledge(MPTTModel, PrivacyBaseModel):
             models.Index(fields=['user', 'privacy']),
         ]
 
-    def delete(self, *args, **kwargs):
-        if self.is_deleted:
-            raise NotFound()
-        self.is_deleted = True
-        self.deleted_at = timezone.now()
-        self.save()
+    # def delete(self, *args, **kwargs):
+    #     if self.is_deleted:
+    #         raise NotFound()
+    #     self.is_deleted = True
+    #     self.deleted_at = timezone.now()
+    #     self.save()
 
     def __str__(self):
         return f"{self.user.username} - {self.topic if self.topic else 'Без темы'}"
+
+
+class Note(AbstractBaseModel):
+    topic = models.OneToOneField(
+        MyKnowledge,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name='topic_note',
+    )
+
+    note = models.TextField(null=True, blank=True)

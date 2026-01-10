@@ -5,11 +5,12 @@ from typing import Any
 from mptt.templatetags.mptt_tags import cache_tree_children
 
 from django.db import transaction
+from django.db.utils import IntegrityError
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.core.cache import cache
-
 from django.http import HttpResponse
+
 from rest_framework import viewsets, status
 from rest_framework.serializers import BaseSerializer
 from rest_framework.decorators import action
@@ -18,16 +19,27 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from apps.my_knowledge.models import MyKnowledge, Topic
-from apps.my_knowledge.serializers import MyKnowledgeSerializer, TopicSerializer
+from apps.my_knowledge.models import MyKnowledge, Note
+from apps.my_knowledge.serializers import (
+    MyKnowledgeSerializer, NoteSerializer
+)
 
 
-class TopicViewSet(viewsets.ModelViewSet):
+class NoteViewSet(viewsets.ModelViewSet):
     """
     Представление для отображения всего списка топиков
     """
-    queryset = Topic.objects.all()
-    serializer_class = TopicSerializer
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    # lookup_field = 'pk'
+
+    def get_object(self) -> Any:
+        try:
+            obj, _ = Note.objects.get_or_create(pk=self.kwargs.get('note_id'))
+        except IntegrityError:
+            raise NotFound()
+
+        return obj
 
 
 class MyKnowledgeViewSet(viewsets.ModelViewSet):
@@ -42,7 +54,7 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
 
     def get_object(self) -> Any:
         note = MyKnowledge.objects.filter(
-            user=self.request.user, id=self.kwargs['note_id']
+            user=self.request.user, id=self.kwargs['topic_id']
         ).first()
         if note is None:
             raise NotFound()
@@ -180,6 +192,18 @@ class MyKnowledgeViewSet(viewsets.ModelViewSet):
                 output_serializer.data,  # ← сериализованные данные
                 status=status.HTTP_201_CREATED,
             )
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Удаляем всех потомков
+        descendants = instance.get_descendants()
+        descendants.delete()  # или descendants._raw_delete()
+
+        # Удаляем саму запись
+        instance.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=["GET"], detail=False)
     def get_user_note_list(
