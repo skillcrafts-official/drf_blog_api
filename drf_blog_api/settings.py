@@ -252,7 +252,7 @@ with open('README.md', 'r', encoding='utf-8') as file:
 
 SPECTACULAR_SETTINGS = {
     # Основные настройки
-    "TITLE": "Blog API",
+    "TITLE": "API for SkillCrafts.Ru",
     "VERSION": "release version 0.1",
     "DESCRIPTION": DESCRIPTION,
     # (
