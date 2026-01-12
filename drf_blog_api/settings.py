@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from datetime import timedelta
+
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-from datetime import timedelta
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -45,11 +46,11 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    
+
     # MEDIA URL с HTTPS
-    MEDIA_URL = 'https://portfolio-blog-api.ru/media/'
+    MEDIA_URL = 'https://api.skillcrafts.ru/media/'
     # Или протокол-агностичный
-    # MEDIA_URL = '//portfolio-blog-api.ru/media/'
+    # MEDIA_URL = '//api.skillcrafts.ru/media/'
 else:
     # РАЗРАБОТКА
     MEDIA_URL = '/media/'
@@ -246,41 +247,59 @@ REST_FRAMEWORK = {
     # ]
 }
 
-# SPECTACULAR_SETTINGS = {
-#     "TITLE": "Blog API",  # название проекта
-#     "VERSION": "mvp.2025.12.4",  # версия проекта
-#     "SERVE_INCLUDE_SCHEMA": False,  # исключить эндпоинт /schema
-#     'SORT_OPERATION_PARAMETERS': False,
-#     # TITLE (строка): Заголовок API в документации.
-#     'DESCRIPTION': 'Добавлены ендпоинты для работы с резюме',
-#     # VERSION (строка): Версия API.
-#     # SERVE_INCLUDE_SCHEMA (булево): Включать ли схему OpenAPI в Swagger UI (по умолчанию True).
-#     # SWAGGER_UI_SETTINGS (словарь): Настройки для Swagger UI.
-#     # ENUM_NAME_OVERRIDES (словарь): Настройка имен для элементов перечислений.
-#     'ENUM_NAME_OVERRIDES': {
-#         # Указываем, что все эти поля используют один Enum
-#         'PrivacyEnum': 'apps.privacy_settings.models.PRIVACIES',
-#     }
-#     # SCHEMA_PATH_PREFIX
-#     # Добавьте эти настройки для JWT
-#     # 'SCHEMA_PATH_PREFIX': '/auth/',
-#     # 'COMPONENT_SPLIT_REQUEST': True,
-    
-#     # # Явно укажите методы для токен эндпоинтов
-#     # 'PREPROCESSING_HOOKS': [
-#     #     'drf_spectacular.hooks.preprocess_exclude_path_format',
-#     # ],
-# }
+with open('README.md', 'r', encoding='utf-8') as file:
+    DESCRIPTION = file.read()
 
 SPECTACULAR_SETTINGS = {
     # Основные настройки
     "TITLE": "Blog API",
-    "VERSION": "mvp.2026.1.1",
-    "DESCRIPTION": (
-        'API для блога с JWT аутентификацией (пользователи + гости)  \n'
-        '22.12.2025 - Добавлено приложение для тайм-менеджмента  \n'
-        '07.01.2026 - Добавлено приложение для знаний'
-    ),
+    "VERSION": "release version 0.1",
+    "DESCRIPTION": DESCRIPTION,
+    # (
+    #     'API для сервиса [https://skillcrafts.ru](https://skillcrafts.ru) '
+    #     'с JWT аутентификацией (пользователи + гости)  \n  \n'
+
+    #     '#### Приложение **accounts**  \n'
+    #     'Данное приложение проводит регистрацию и контролирует вход '
+    #     'пользователей в сервис. Проводит аутентификацию и разграничение '
+    #     'прав доступа.  \n  \n'
+    #     'В сервис можно войти как под временной учётной записью (гостем), '
+    #     'так и под постоянной. Для постоянной учётной записи необходимо '
+    #     'указать и подтвердить email.  \n  \n'
+    #     'Больше подробностей в ендпоинтах '
+    #     '[**auth**](http://127.0.0.1:8000/api/docs/#/auth).  \n  \n'
+
+    #     '#### Приложение **privacy-settings**  \n'
+    #     'Данное приложение позволяет пользователю гибко управлять '
+    #     'доступом к своему контенту, реализуя политику конфеденциальности.'
+    #     '  \n  \n'
+    #     'В этом приложении настраивается чёрный и белый список '
+    #     'пользователей, а также тонко настраивать видимость персональных '
+    #     'данных.  \n  \n'
+    #     'Всего можно настроить 4 уровня доступа к информации:  \n'
+    #     '1. Видно всем.  \n'
+    #     '2. Видно всем, кроме...  \n'
+    #     '3. Невидно никому, кроме...  \n'
+    #     '4. Невидно никому.  \n  \n'
+    #     'Указанная градация уровней применима к использованию в контексте. '
+    #     'Больше подробностей в ендпоинтах '
+    #     '[**privacy-settings**](http://127.0.0.1:8000/api/docs/#/privacy-settings), '
+    #     'а также во всех ендпоинтах с полем `privacy`.'
+    #     '  \n  \n'
+
+    #     '#### Приложение **knowledge**  \n'
+    #     'Данное приложение позволяет составлять карту знаний в виде '
+    #     'дерева заметок.'
+    #     '  \n  \n'
+    #     'По своей структуре это классическая карта знаний (MindMap). '
+    #     'Пользователь по своему желанию, может составлять карты '
+    #     'своих знаний и иметь лёгкий доступ к ним. Также пользователь '
+    #     'может гибко управлять видимостью своих знаний.'
+    #     '  \n  \n'
+    #     'Больше подробностей в ендпоинтах '
+    #     '[**knowledge**](http://127.0.0.1:8000/api/docs/#/knowledge).'
+    #     '  \n  \n'
+    # ),
 
     # Включение схемы безопасности
     "SERVE_INCLUDE_SCHEMA": True,  # Оставьте True для отладки
@@ -303,9 +322,15 @@ SPECTACULAR_SETTINGS = {
 
     # Настройки Swagger UI
     "SWAGGER_UI_SETTINGS": {
-        # "deepLinking": True,
+        'deepLinking': True,  # ← Включить глубокие ссылки
         "persistAuthorization": True,  # Сохраняет авторизацию при перезагрузке
-        # "displayOperationId": False,
+        "displayOperationId": True,  # Показывать ID операций
+        # "defaultModelsExpandDepth": 1,
+        # "defaultModelExpandDepth": 1,
+        "docExpansion": "list",  # или "list", "full"
+        # "filter": True,
+        # "showExtensions": True,
+        "showCommonExtensions": True, # "displayOperationId": False,
         # "defaultModelsExpandDepth": 1,
         # "defaultModelExpandDepth": 1,
         # "defaultModelRendering": "model",
