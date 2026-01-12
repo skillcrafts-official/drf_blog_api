@@ -250,11 +250,15 @@ REST_FRAMEWORK = {
 with open('README.md', 'r', encoding='utf-8') as file:
     DESCRIPTION = file.read()
 
+BASE_URL = {
+    'BASE_URL': 'http://127.0.0.1:8000' if DEBUG else 'https://api.skillcrafts.ru'
+}
+
 SPECTACULAR_SETTINGS = {
     # Основные настройки
     "TITLE": "API for SkillCrafts.Ru",
     "VERSION": "release version 0.1",
-    "DESCRIPTION": DESCRIPTION,
+    "DESCRIPTION": DESCRIPTION.format(**BASE_URL),
     # (
     #     'API для сервиса [https://skillcrafts.ru](https://skillcrafts.ru) '
     #     'с JWT аутентификацией (пользователи + гости)  \n  \n'
