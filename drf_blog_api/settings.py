@@ -14,6 +14,7 @@ from datetime import timedelta
 
 import os
 from pathlib import Path
+from docs.utils import read_md_section
 from dotenv import load_dotenv
 
 
@@ -93,7 +94,8 @@ INSTALLED_APPS = [
     'django_cleanup.apps.CleanupConfig',
     'mptt',
     # drf apps
-    'apps.accounts', 'apps.profiles', 'apps.posts',
+    'apps.authentication', 'apps.accounts', 'apps.profiles', 'apps.consents',
+    'apps.posts',
     'apps.privacy_settings', 'apps.media_manage',
     'apps.resume', 'apps.my_workflows', 'apps.my_knowledge',
     # django apps
@@ -233,7 +235,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         # 'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'apps.accounts.authentication.UnifiedJWTAuthentication',
+        'apps.authentication.authentication.UnifiedJWTAuthentication',
         # 'rest_framework.authentication.SessionAuthentication'
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -247,9 +249,6 @@ REST_FRAMEWORK = {
     # ]
 }
 
-with open('README.md', 'r', encoding='utf-8') as file:
-    DESCRIPTION = file.read()
-
 BASE_URL = {
     'BASE_URL': 'http://127.0.0.1:8000' if DEBUG else 'https://api.skillcrafts.ru'
 }
@@ -258,52 +257,7 @@ SPECTACULAR_SETTINGS = {
     # Основные настройки
     "TITLE": "API for SkillCrafts.Ru",
     "VERSION": "release version 0.1",
-    "DESCRIPTION": DESCRIPTION.format(**BASE_URL),
-    # (
-    #     'API для сервиса [https://skillcrafts.ru](https://skillcrafts.ru) '
-    #     'с JWT аутентификацией (пользователи + гости)  \n  \n'
-
-    #     '#### Приложение **accounts**  \n'
-    #     'Данное приложение проводит регистрацию и контролирует вход '
-    #     'пользователей в сервис. Проводит аутентификацию и разграничение '
-    #     'прав доступа.  \n  \n'
-    #     'В сервис можно войти как под временной учётной записью (гостем), '
-    #     'так и под постоянной. Для постоянной учётной записи необходимо '
-    #     'указать и подтвердить email.  \n  \n'
-    #     'Больше подробностей в ендпоинтах '
-    #     '[**auth**](http://127.0.0.1:8000/api/docs/#/auth).  \n  \n'
-
-    #     '#### Приложение **privacy-settings**  \n'
-    #     'Данное приложение позволяет пользователю гибко управлять '
-    #     'доступом к своему контенту, реализуя политику конфеденциальности.'
-    #     '  \n  \n'
-    #     'В этом приложении настраивается чёрный и белый список '
-    #     'пользователей, а также тонко настраивать видимость персональных '
-    #     'данных.  \n  \n'
-    #     'Всего можно настроить 4 уровня доступа к информации:  \n'
-    #     '1. Видно всем.  \n'
-    #     '2. Видно всем, кроме...  \n'
-    #     '3. Невидно никому, кроме...  \n'
-    #     '4. Невидно никому.  \n  \n'
-    #     'Указанная градация уровней применима к использованию в контексте. '
-    #     'Больше подробностей в ендпоинтах '
-    #     '[**privacy-settings**](http://127.0.0.1:8000/api/docs/#/privacy-settings), '
-    #     'а также во всех ендпоинтах с полем `privacy`.'
-    #     '  \n  \n'
-
-    #     '#### Приложение **knowledge**  \n'
-    #     'Данное приложение позволяет составлять карту знаний в виде '
-    #     'дерева заметок.'
-    #     '  \n  \n'
-    #     'По своей структуре это классическая карта знаний (MindMap). '
-    #     'Пользователь по своему желанию, может составлять карты '
-    #     'своих знаний и иметь лёгкий доступ к ним. Также пользователь '
-    #     'может гибко управлять видимостью своих знаний.'
-    #     '  \n  \n'
-    #     'Больше подробностей в ендпоинтах '
-    #     '[**knowledge**](http://127.0.0.1:8000/api/docs/#/knowledge).'
-    #     '  \n  \n'
-    # ),
+    "DESCRIPTION": read_md_section('api/description.md').format(**BASE_URL),
 
     # Включение схемы безопасности
     "SERVE_INCLUDE_SCHEMA": True,  # Оставьте True для отладки
@@ -328,7 +282,7 @@ SPECTACULAR_SETTINGS = {
     "SWAGGER_UI_SETTINGS": {
         'deepLinking': True,  # ← Включить глубокие ссылки
         "persistAuthorization": True,  # Сохраняет авторизацию при перезагрузке
-        "displayOperationId": True,  # Показывать ID операций
+        # "displayOperationId": True,  # Показывать ID операций
         # "defaultModelsExpandDepth": 1,
         # "defaultModelExpandDepth": 1,
         "docExpansion": "list",  # или "list", "full"
